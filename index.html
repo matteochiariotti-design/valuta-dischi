@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Album Rater Pro</title>
+<style>
+:root{--bg:#0f1117;--card:#181b24;--card2:#202430;--border:#2c3142;--text:#eef0f6;--muted:#949cb3;--accent:#6c8cff;--accent2:#4ade80;--warn:#fbbf24;--danger:#f87171}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);padding:16px}
+.container{max-width:1220px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:12px}
+h1{margin:0;font-size:1.4rem}.tabs{display:flex;gap:8px}
+.tab-btn{background:var(--card2);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.search-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input,select{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.92rem}
+input:focus{outline:none;border-color:var(--accent)}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem}
+.btn-sec{background:var(--card2);border:1px solid var(--border);color:var(--text)}
+.btn-ok{background:#16a34a}.btn-del{background:#dc2626;padding:5px 9px;font-size:.8rem}
+.album-header{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.cover{width:80px;height:80px;border-radius:10px;object-fit:cover;background:var(--card2);border:1px solid var(--border)}
+.grid-main{display:grid;grid-template-columns:1.8fr 1fr;gap:16px}
+@media(max-width:950px){.grid-main{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;color:var(--muted);padding:7px 5px;border-bottom:1px solid var(--border)}
+td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
+.num-input{width:62px;text-align:center;font-weight:700;padding:5px}
+.rym-input{width:68px;text-align:center;padding:5px;color:#93c5fd;font-weight:600}
+.title-input{width:100%;min-width:120px;padding:5px 7px}.note-input{width:65px;padding:5px 7px}
+.rym-bars{display:flex;gap:2px;align-items:center}
+.rym-dot{width:12px;height:18px;border-radius:3px;background:var(--card2);border:1px solid var(--border)}
+.rym-dot.on{background:var(--accent);border-color:var(--accent)}
+.rym-score-lbl{margin-left:5px;font-size:.8rem;font-weight:700;color:var(--accent);min-width:20px}
+.score-box{text-align:center;padding:14px;background:linear-gradient(135deg,#1d2336,#171c2b);border:1px solid var(--accent);border-radius:12px;margin-bottom:14px}
+.score-big{font-size:2.5rem;font-weight:800;color:var(--accent2);line-height:1.1}
+.score-sub{color:var(--muted);font-size:.83rem;margin-top:4px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{background:var(--card2);padding:10px;border-radius:8px;border:1px solid var(--border)}
+.stat-box h4{margin:0 0 6px 0;font-size:.82rem;color:var(--accent);text-transform:uppercase}
+.stat-line{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px;color:var(--muted)}
+.stat-line span:last-child{color:var(--text);font-weight:600}
+.badge-ok{color:var(--accent2)!important}.badge-no{color:var(--warn)!important}
+.search-results{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.res-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);padding:8px;border-radius:8px;cursor:pointer;max-width:310px}
+.res-item:hover{border-color:var(--accent)}.res-item img{width:44px;height:44px;border-radius:6px;object-fit:cover}
+.archive-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<header><h1>💿 Album Rater Pro</h1><div class="tabs">
+<button class="tab-btn active" onclick="switchTab('editor',this)">Valuta Disco</button>
+<button class="tab-btn" onclick="switchTab('archive',this)">Archivio (<span id="arch-count">0</span>)</button>
+<button class="tab-btn" onclick="switchTab('settings',this)">Formule</button>
+</div></header>
+<div id="tab-editor" class="panel active">
+<div class="card"><div class="search-row">
+<input id="q-artist" placeholder="Artista (es. Fontaines D.C.)" style="flex:1;min-width:150px">
+<input id="q-album" placeholder="Titolo Album (es. Romance)" style="flex:1;min-width:150px">
+<button class="btn" onclick="searchAlbum()">🔍 Cerca Tracklist</button>
+<button class="btn btn-sec" onclick="resetAlbum()">+ Nuovo Vuoto</button>
+</div><div id="search-results" class="search-results"></div></div>
+<div class="grid-main"><div class="card"><div class="album-header">
+<img id="album-cover" class="cover" src="data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E">
+<div style="flex:1;display:flex;flex-direction:column;gap:6px">
+<input id="ed-artist" placeholder="Nome Artista" style="font-weight:700">
+<div style="display:flex;gap:8px"><input id="ed-title" placeholder="Titolo Album" style="flex:1"><input id="ed-year" placeholder="Anno" style="width:75px"></div>
+</div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+<span style="font-size:.8rem;color:var(--muted)">Voto <b>0</b> = Interludio | Voto <b>RYM</b> (es. 3,79) = curva 1–10 automatica</span>
+<div style="display:flex;gap:6px"><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="copyInfToSup()">Copia Inf → Sup</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="addTrack()">+ Traccia</button></div>
+</div>
+<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Titolo Traccia</th><th style="text-align:center">Inf.</th><th style="text-align:center">Sup.</th><th style="text-align:center">RYM</th><th>Curva (1–10)</th><th>Note</th><th></th></tr></thead><tbody id="tracks-body"></tbody></table></div>
+</div><div>
+<div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button></div></div>
+<div class="stat-grid">
+<div class="stat-box"><h4>Media Inferiore</h4>
+<div class="stat-line"><span>Somma voti:</span><span id="inf-sum">0</span></div>
+<div class="stat-line"><span>Media mat.:</span><span id="inf-mat">0.000</span></div>
+<div class="stat-line"><span>Brani ≥ 7.0:</span><span id="inf-ge7">0 / 0</span></div>
+<div class="stat-line"><span>Bonus picchi:</span><span id="inf-bonus">+0.000</span></div>
+<div class="stat-line"><span>Detraz. insuff.:</span><span id="inf-malus">-0.000</span></div>
+<div class="stat-line" style="border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span>Media Pond.:</span><span id="inf-pond" style="color:var(--accent2)">0.000</span></div>
+</div>
+<div class="stat-box"><h4>Media Superiore</h4>
+<div class="stat-line"><span>Somma voti:</span><span id="sup-sum">0</span></div>
+<div class="stat-line"><span>Media mat.:</span><span id="sup-mat">0.000</span></div>
+<div class="stat-line"><span>Brani ≥ 7.0:</span><span id="sup-ge7">0 / 0</span></div>
+<div class="stat-line"><span>Bonus picchi:</span><span id="sup-bonus">+0.000</span></div>
+<div class="stat-line"><span>Detraz. insuff.:</span><span id="sup-malus">-0.000</span></div>
+<div class="stat-line" style="border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span>Media Pond.:</span><span id="sup-pond" style="color:var(--accent2)">0.000</span></div>
+</div></div>
+<div class="card" style="margin-top:12px"><h4 style="margin:0 0 8px 0;font-size:.88rem;color:var(--muted)">Dettaglio Fasce (Inf | Sup)</h4>
+<div class="stat-line"><span>7.0–7.4 (N×<span class="lbl-b1">3</span>):</span><span id="det-b1">0 | 0</span></div>
+<div class="stat-line"><span>7.5–7.9 (N×<span class="lbl-b2">2</span>):</span><span id="det-b2">0 | 0</span></div>
+<div class="stat-line"><span>8.0–8.9 (N×<span class="lbl-b3">1</span>):</span><span id="det-b3">0 | 0</span></div>
+<div class="stat-line"><span>9.0+ (N×<span class="lbl-b4">0.5</span>):</span><span id="det-b4">0 | 0</span></div>
+<hr style="border:0;border-top:1px solid var(--border);margin:6px 0">
+<div class="stat-line"><span>5.0–5.9 (N×<span class="lbl-m1">3</span>):</span><span id="det-m1">0 | 0</span></div>
+<div class="stat-line"><span>4.0–4.9 (N×<span class="lbl-m2">2</span>):</span><span id="det-m2">0 | 0</span></div>
+<div class="stat-line"><span>&lt; 4.0 (N×<span class="lbl-m3">1</span>):</span><span id="det-m3">0 | 0</span></div>
+</div></div></div></div>
+<div id="tab-archive" class="panel"><div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+<input id="arch-filter" placeholder="Filtra artista o album..." oninput="renderArchive()" style="flex:1;min-width:180px">
+<div style="display:flex;gap:8px"><select id="arch-sort" onchange="renderArchive()"><option value="score">Voto (Alto → Basso)</option><option value="date">Data</option><option value="artist">Artista</option></select><button class="btn btn-sec" onclick="exportCSV()">📥 CSV</button></div>
+</div><div id="archive-list"></div></div></div>
+<div id="tab-settings" class="panel"><div class="card"><h3 style="margin-top:0">Moltiplicatori al Denominatore: Brani / (N × Moltiplicatore)</h3>
+<div class="stat-grid"><div class="stat-box"><h4>Bonus (attivi se brani ≥ 7.0 sono ≥ 50%)</h4>
+<div class="stat-line"><span>7.0–7.4:</span><input type="number" step="0.5" id="cfg-b1" value="3" class="num-input" onchange="saveCfg()"></div>
+<div class="stat-line"><span>7.5–7.9:</span><input type="number" step="0.5" id="cfg-b2" value="2" class="num-input" onchange="saveCfg()"></div>
+<div class="stat-line"><span>8.0–8.9:</span><input type="number" step="0.5" id="cfg-b3" value="1" class="num-input" onchange="saveCfg()"></div>
+<div class="stat-line"><span>9.0+:</span><input type="number" step="0.5" id="cfg-b4" value="0.5" class="num-input" onchange="saveCfg()"></div>
+</div><div class="stat-box"><h4>Malus Insufficienze (sempre attivi)</h4>
+<div class="stat-line"><span>5.0–5.9:</span><input type="number" step="0.5" id="cfg-m1" value="3" class="num-input" onchange="saveCfg()"></div>
+<div class="stat-line"><span>4.0–4.9:</span><input type="number" step="0.5" id="cfg-m2" value="2" class="num-input" onchange="saveCfg()"></div>
+<div class="stat-line"><span>&lt; 4.0:</span><input type="number" step="0.5" id="cfg-m3" value="1" class="num-input" onchange="saveCfg()"></div>
+</div></div></div></div></div>
+<script>
+let tracks = [];
+let currentCover = "";
+let cfg = JSON.parse(localStorage.getItem("ar_cfg") || '{"b1":3,"b2":2,"b3":1,"b4":0.5,"m1":3,"m2":2,"m3":1}');
+let archive = JSON.parse(localStorage.getItem("ar_archive") || "[]");
+
+function init() {
+  Object.keys(cfg).forEach(k => document.getElementById("cfg-" + k).value = cfg[k]);
+  updateLabels();
+  resetAlbum();
+  updateArchCount();
+}
+
+function saveCfg() {
+  Object.keys(cfg).forEach(k => cfg[k] = parseFloat(document.getElementById("cfg-" + k).value) || 1);
+  localStorage.setItem("ar_cfg", JSON.stringify(cfg));
+  updateLabels();
+  recalc();
+}
+
+function updateLabels() {
+  Object.keys(cfg).forEach(k => {
+    document.querySelectorAll(".lbl-" + k).forEach(e => e.textContent = cfg[k]);
+  });
+}
+
+function switchTab(n, b) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+  document.getElementById("tab-" + n).classList.add("active");
+  b.classList.add("active");
+  if (n === "archive") renderArchive();
+}
+
+function resetAlbum() {
+  document.getElementById("ed-artist").value = "";
+  document.getElementById("ed-title").value = "";
+  document.getElementById("ed-year").value = "";
+  currentCover = "";
+  document.getElementById("album-cover").src = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E";
+  tracks = Array.from({length: 10}, (_, i) => ({
+    title: `Traccia ${i + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: ""
+  }));
+  renderTracks();
+}
+
+function addTrack() {
+  tracks.push({ title: `Traccia ${tracks.length + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" });
+  renderTracks();
+}
+
+function removeTrack(i) {
+  tracks.splice(i, 1);
+  computeAutoRym();
+  renderTracks();
+}
+
+function copyInfToSup() {
+  tracks.forEach(t => t.sup = t.inf);
+  renderTracks();
+}
+
+function onRymInput(i, v) {
+  tracks[i].rymRaw = v;
+  computeAutoRym();
+  updateRymBarsOnly();
+}
+
+function computeAutoRym() {
+  const nums = tracks
+    .map(t => parseFloat(String(t.rymRaw || "").replace(",", ".")))
+    .filter(n => !isNaN(n) && n > 0);
+  if (!nums.length) {
+    tracks.forEach(t => t.rym = 0);
+    return;
+  }
+  const maxV = Math.max(...nums);
+  const minV = Math.min(...nums);
+  const spread = maxV - minV;
+  tracks.forEach(t => {
+    const v = parseFloat(String(t.rymRaw || "").replace(",", "."));
+    if (isNaN(v) || v <= 0) t.rym = 0;
+    else if (spread === 0) t.rym = 10;
+    else {
+      const step = Math.max(spread, 0.5);
+      t.rym = Math.max(1, Math.min(10, Math.round(10 - ((maxV - v) / step) * 9)));
+    }
+  });
+}
+function updateRymBarsOnly() {
+  tracks.forEach((t, i) => {
+    const c = document.getElementById(`rym-cell-${i}`);
+    if (!c) return;
+    let b = `<div class="rym-bars">`;
+    for (let k = 1; k <= 10; k++) {
+      b += `<div class="rym-dot ${t.rym >= k ? 'on' : ''}"></div>`;
+    }
+    b += `<span class="rym-score-lbl">${t.rym > 0 ? t.rym : '-'}</span></div>`;
+    c.innerHTML = b;
+  });
+}
+
+function renderTracks() {
+  computeAutoRym();
+  const tb = document.getElementById("tracks-body");
+  tb.innerHTML = "";
+  tracks.forEach((t, i) => {
+    const tr = document.createElement("tr");
+    let b = `<div class="rym-bars">`;
+    for (let k = 1; k <= 10; k++) {
+      b += `<div class="rym-dot ${t.rym >= k ? 'on' : ''}"></div>`;
+    }
+    b += `<span class="rym-score-lbl">${t.rym > 0 ? t.rym : '-'}</span></div>`;
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td><input class="title-input" value="${t.title.replace(/"/g, '&quot;')}" oninput="tracks[${i}].title=this.value"></td>
+      <td style="text-align:center"><input type="number" step="0.5" min="0" max="10" class="num-input" value="${t.inf}" oninput="tracks[${i}].inf=parseFloat(this.value)||0;recalc()"></td>
+      <td style="text-align:center"><input type="number" step="0.5" min="0" max="10" class="num-input" value="${t.sup}" oninput="tracks[${i}].sup=parseFloat(this.value)||0;recalc()"></td>
+      <td style="text-align:center"><input class="rym-input" placeholder="3,79" value="${t.rymRaw || ''}" oninput="onRymInput(${i},this.value)"></td>
+      <td id="rym-cell-${i}">${b}</td>
+      <td><input class="note-input" value="${t.note}" oninput="tracks[${i}].note=this.value"></td>
+      <td><button class="btn btn-del" onclick="removeTrack(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  recalc();
+}
+
+function calcSide(vals) {
+  const valid = vals.filter(v => v > 0);
+  const N = valid.length;
+  if (N === 0) {
+    return { sum:0, mat:0, ge7:0, N:0, bonus:0, malus:0, pond:0, c:Array.of(0,0,0,0), m:Array.of(0,0,0) };
+  }
+  const sum = valid.reduce((a, b) => a + b, 0);
+  const mat = sum / N;
+  const c1 = valid.filter(v => v >= 7 && v < 7.5).length;
+  const c2 = valid.filter(v => v >= 7.5 && v < 8).length;
+  const c3 = valid.filter(v => v >= 8 && v < 9).length;
+  const c4 = valid.filter(v => v >= 9).length;
+  const ge7 = c1 + c2 + c3 + c4;
+  const bonus = (ge7 >= N / 2) ? ((c1 / (N * cfg.b1)) + (c2 / (N * cfg.b2)) + (c3 / (N * cfg.b3)) + (c4 / (N * cfg.b4))) : 0;
+  const m1 = valid.filter(v => v >= 5 && v < 6).length;
+  const m2 = valid.filter(v => v >= 4 && v < 5).length;
+  const m3 = valid.filter(v => v > 0 && v < 4).length;
+  const malus = (m1 / (N * cfg.m1)) + (m2 / (N * cfg.m2)) + (m3 / (N * cfg.m3));
+  return { sum, mat, ge7, N, bonus, malus, pond: mat + bonus - malus, c: Array.of(c1,c2,c3,c4), m: Array.of(m1,m2,m3) };
+}
+function recalc() {
+  const inf = calcSide(tracks.map(t => t.inf));
+  const sup = calcSide(tracks.map(t => t.sup));
+  const ex = tracks.filter(t => t.inf === 0 && t.sup === 0).length;
+  const fin = (inf.N > 0 && sup.N > 0) ? ((inf.pond + sup.pond) / 2) : 0;
+  document.getElementById("res-final").textContent = fin.toFixed(3);
+  document.getElementById("res-meta").textContent = `${inf.N} tracce valide (${ex} interludi esclusi)`;
+  document.getElementById("inf-sum").textContent = inf.sum.toFixed(1);
+  document.getElementById("inf-mat").textContent = inf.mat.toFixed(3);
+  const e1 = document.getElementById("inf-ge7");
+  e1.textContent = `${inf.ge7} / ${inf.N} ${inf.ge7 >= inf.N / 2 && inf.N > 0 ? '✓' : ''}`;
+  e1.className = (inf.ge7 >= inf.N / 2 && inf.N > 0) ? "badge-ok" : "badge-no";
+  document.getElementById("inf-bonus").textContent = `+${inf.bonus.toFixed(3)}`;
+  document.getElementById("inf-malus").textContent = `-${inf.malus.toFixed(3)}`;
+  document.getElementById("inf-pond").textContent = inf.pond.toFixed(3);
+  document.getElementById("sup-sum").textContent = sup.sum.toFixed(1);
+  document.getElementById("sup-mat").textContent = sup.mat.toFixed(3);
+  const e2 = document.getElementById("sup-ge7");
+  e2.textContent = `${sup.ge7} / ${sup.N} ${sup.ge7 >= sup.N / 2 && sup.N > 0 ? '✓' : ''}`;
+  e2.className = (sup.ge7 >= sup.N / 2 && sup.N > 0) ? "badge-ok" : "badge-no";
+  document.getElementById("sup-bonus").textContent = `+${sup.bonus.toFixed(3)}`;
+  document.getElementById("sup-malus").textContent = `-${sup.malus.toFixed(3)}`;
+  document.getElementById("sup-pond").textContent = sup.pond.toFixed(3);
+  for (let i = 0; i < 4; i++) document.getElementById(`det-b${i + 1}`).textContent = `${inf.c.at(i)} | ${sup.c.at(i)}`;
+  for (let i = 0; i < 3; i++) document.getElementById(`det-m${i + 1}`).textContent = `${inf.m.at(i)} | ${sup.m.at(i)}`;
+}
+
+async function searchAlbum() {
+  const a = document.getElementById("q-artist").value.trim();
+  const b = document.getElementById("q-album").value.trim();
+  const q = encodeURIComponent(`${a} ${b}`.trim());
+  if (!q) return;
+  const box = document.getElementById("search-results");
+  box.innerHTML = "<span style='color:var(--muted)'>Ricerca in corso...</span>";
+  try {
+    const r = await fetch(`https://apple.com{q}&entity=album&limit=6`);
+    const d = await r.json();
+    box.innerHTML = "";
+    d.results.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "res-item";
+      div.innerHTML = `<img src="${item.artworkUrl100}"><div><b>${item.collectionName}</b><br><span style="font-size:.8rem;color:var(--muted)">${item.artistName} (${(item.releaseDate || "").slice(0, 4)})</span></div>`;
+      div.onclick = () => loadAlbumTracks(item);
+      box.appendChild(div);
+    });
+  } catch (e) {
+    box.innerHTML = "<span style='color:var(--danger)'>Errore di rete.</span>";
+  }
+}
+
+async function loadAlbumTracks(it) {
+  document.getElementById("ed-artist").value = it.artistName;
+  document.getElementById("ed-title").value = it.collectionName;
+  document.getElementById("ed-year").value = (it.releaseDate || "").slice(0, 4);
+  currentCover = it.artworkUrl100.replace("100x100", "300x300");
+  document.getElementById("album-cover").src = currentCover;
+  document.getElementById("search-results").innerHTML = "";
+  try {
+    const r = await fetch(`https://apple.com{it.collectionId}&entity=song`);
+    const d = await r.json();
+    const s = d.results.filter(x => x.wrapperType === "track");
+    if (s.length) {
+      tracks = s.map(x => ({ title: x.trackName, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+      renderTracks();
+    }
+  } catch (e) { alert("Tracklist non disponibile."); }
+}
+
+function saveToArchive() {
+  const artist = document.getElementById("ed-artist").value.trim() || "Artista";
+  const title = document.getElementById("ed-title").value.trim() || "Album";
+  const year = document.getElementById("ed-year").value.trim();
+  const finalScore = parseFloat(document.getElementById("res-final").textContent);
+  const id = `${artist.toLowerCase()}::${title.toLowerCase()}`;
+  const entry = { id, artist, title, year, cover: currentCover, finalScore, tracks: JSON.parse(JSON.stringify(tracks)), date: new Date().toISOString() };
+  const idx = archive.findIndex(a => a.id === id);
+  if (idx >= 0) archive.splice(idx, 1, entry); else archive.unshift(entry);
+  localStorage.setItem("ar_archive", JSON.stringify(archive));
+  updateArchCount();
+  alert(`Salvato: ${artist} - ${title} (${finalScore.toFixed(3)})`);
+}
+
+function updateArchCount() { document.getElementById("arch-count").textContent = archive.length; }
+
+function renderArchive() {
+  const q = document.getElementById("arch-filter").value.toLowerCase();
+  const s = document.getElementById("arch-sort").value;
+  let list = archive.filter(a => a.artist.toLowerCase().includes(q) || a.title.toLowerCase().includes(q));
+  if (s === "score") list.sort((a, b) => b.finalScore - a.finalScore);
+  else if (s === "artist") list.sort((a, b) => a.artist.localeCompare(b.artist));
+  const box = document.getElementById("archive-list");
+  box.innerHTML = list.length ? "" : "<p style='color:var(--muted)'>Nessun album salvato.</p>";
+  list.forEach((a, i) => {
+    const div = document.createElement("div");
+    div.className = "archive-item";
+    div.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><b style="color:var(--muted)">#${i + 1}</b>${a.cover ? `<img src="${a.cover}" style="width:44px;height:44px;border-radius:6px">` : ''}<div><b>${a.artist} - ${a.title}</b> ${a.year ? `(${a.year})` : ''}<br><span style="font-size:.8rem;color:var(--muted)">${a.tracks.length} tracce</span></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.25rem;font-weight:800;color:var(--accent2)">${a.finalScore.toFixed(3)}</span><button class="btn btn-sec" style="padding:5px 9px" onclick="loadFromArchive('${a.id}')">Apri</button><button class="btn btn-del" onclick="deleteFromArchive('${a.id}')">✕</button></div>`;
+    box.appendChild(div);
+  });
+}
+
+function loadFromArchive(id) {
+  const it = archive.find(a => a.id === id);
+  if (!it) return;
+  document.getElementById("ed-artist").value = it.artist;
+  document.getElementById("ed-title").value = it.title;
+  document.getElementById("ed-year").value = it.year || "";
+  currentCover = it.cover || "";
+  if (currentCover) document.getElementById("album-cover").src = currentCover;
+  tracks = JSON.parse(JSON.stringify(it.tracks));
+  renderTracks();
+  document.querySelector(".tab-btn").click();
+}
+
+function deleteFromArchive(id) {
+  archive = archive.filter(a => a.id !== id);
+  localStorage.setItem("ar_archive", JSON.stringify(archive));
+  updateArchCount();
+  renderArchive();
+}
+
+function exportCSV() {
+  let csv = "Artista;Album;Anno;Voto Finale;Tracce Valide\n";
+  archive.forEach(a => {
+    const v = a.tracks.filter(t => t.inf > 0).length;
+    csv += `"${a.artist}";"${a.title}";"${a.year}";"${a.finalScore.toFixed(3).replace('.', ',')}";"${v}"\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "archivio_dischi.csv";
+  link.click();
+}
+
+init();
+</script>
+</body>
+</html>
