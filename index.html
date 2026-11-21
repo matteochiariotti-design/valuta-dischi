@@ -294,79 +294,65 @@ function recalc() {
   for (let i = 0; i < 3; i++) document.getElementById(`det-m${i + 1}`).textContent = `${inf.m.at(i)} | ${sup.m.at(i)}`;
 }
 
-function jsonpRequest(url) {
-  return new Promise((resolve, reject) => {
-    const cbName = "cb_" + Math.random().toString(36).slice(2);
-    const script = document.createElement("script");
-    const timer = setTimeout(() => { cleanup(); reject(new Error("Timeout")); }, 9000);
-    function cleanup() {
-      clearTimeout(timer);
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-    }
-    window[cbName] = (data) => { cleanup(); resolve(data); };
-    script.onerror = () => { cleanup(); reject(new Error("Bloccato dal browser/AdBlock")); };
-    script.src = url + (url.includes("?") ? "&" : "?") + "output=jsonp&callback=" + cbName;
-    document.body.appendChild(script);
-  });
-}
-
 async function searchAlbum() {
   const a = document.getElementById("q-artist").value.trim();
   const b = document.getElementById("q-album").value.trim();
-  const q = encodeURIComponent(`${a} ${b}`.trim());
-  if (!q) return;
+  if (!a && !b) return;
   const box = document.getElementById("search-results");
-  box.innerHTML = "<span style='color:var(--muted)'>Ricerca su Deezer...</span>";
+  box.innerHTML = "<span style='color:var(--muted)'>Ricerca su MusicBrainz...</span>";
   try {
-    const d = await jsonpRequest(`https://deezer.com{q}&limit=8`);
+    const parts = [];
+    if (a) parts.push(`artist:${a}`);
+    if (b) parts.push(`release:${b}`);
+    const q = encodeURIComponent(parts.join(" AND "));
+    const r = await fetch(`https://musicbrainz.org{q}&fmt=json&limit=8`);
+    const d = await r.json();
     box.innerHTML = "";
-    if (!d.data || !d.data.length) {
+    if (!d.releases || !d.releases.length) {
       box.innerHTML = "<span style='color:var(--warn)'>Nessun album trovato.</span>";
       return;
     }
-    d.data.forEach(item => {
+    d.releases.forEach(item => {
+      const credits = item["artist-credit"] || [];
+      const artistName = (credits.length > 0 && credits.at(0).name) ? credits.at(0).name : a;
+      const year = (item.date || "").slice(0, 4);
+      const count = item["track-count"] ? `${item["track-count"]} tracce` : "";
+      const coverUrl = `https://coverartarchive.org{item.id}/front-250`;
       const div = document.createElement("div");
       div.className = "res-item";
-      const artistName = item.artist ? item.artist.name : a;
-      const count = item.nb_tracks ? `${item.nb_tracks} tracce` : "";
-      div.innerHTML = `<img src="${item.cover_medium || item.cover}"><div><b>${item.title}</b><br><span style="font-size:.8rem;color:var(--muted)">${artistName} ${count ? `• ${count}` : ""}</span></div>`;
-      div.onclick = () => loadAlbumTracks(item);
+      div.innerHTML = `<img src="${coverUrl}" onerror="this.style.display='none'"><div><b>${item.title}</b><br><span style="font-size:.8rem;color:var(--muted)">${artistName} ${year ? `(${year})` : ""} ${count ? `• ${count}` : ""}</span></div>`;
+      div.onclick = () => loadAlbumTracks({ id: item.id, title: item.title, artist: artistName, year: year, cover: coverUrl });
       box.appendChild(div);
     });
   } catch (e) {
-    box.innerHTML = `<span style='color:var(--warn)'>Ricerca automatica bloccata dal browser (${e.message}). Puoi incollare la tracklist qui sotto:</span><br><textarea id="paste-box" rows="4" style="width:100%;margin-top:6px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px" placeholder="Incolla qui i titoli delle tracce (uno per riga)..."></textarea><button class="btn" style="margin-top:6px" onclick="importPastedTracks()">Importa Tracce Incollate</button>`;
+    box.innerHTML = `<span style='color:var(--warn)'>Ricerca bloccata (${e.message}). Incolla qui la tracklist:</span><br><textarea id="paste-box" rows="4" style="width:100%;margin-top:6px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px" placeholder="Incolla qui i titoli delle tracce..."></textarea><button class="btn" style="margin-top:6px" onclick="importPastedTracks()">Importa Tracce</button>`;
   }
 }
 
-function importPastedTracks() {
-  const raw = document.getElementById("paste-box").value;
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-  if (!lines.length) return;
-  tracks = lines.map(line => {
-    let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
-    return { title: clean || line, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" };
-  });
-  document.getElementById("search-results").innerHTML = "";
-  renderTracks();
-}
-
 async function loadAlbumTracks(it) {
-  document.getElementById("ed-artist").value = it.artist ? it.artist.name : "";
-  document.getElementById("ed-title").value = it.title || "";
-  currentCover = it.cover_big || it.cover_medium || "";
-  if (currentCover) document.getElementById("album-cover").src = currentCover;
+  document.getElementById("ed-artist").value = it.artist;
+  document.getElementById("ed-title").value = it.title;
+  document.getElementById("ed-year").value = it.year;
+  currentCover = it.cover;
+  const imgEl = document.getElementById("album-cover");
+  imgEl.onerror = () => { imgEl.src = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E"; };
+  imgEl.src = currentCover;
   document.getElementById("search-results").innerHTML = "<span style='color:var(--muted)'>Caricamento tracce...</span>";
   try {
-    const d = await jsonpRequest(`https://deezer.com{it.id}`);
+    const r = await fetch(`https://musicbrainz.org{it.id}?inc=recordings&fmt=json`);
+    const d = await r.json();
     document.getElementById("search-results").innerHTML = "";
-    if (d.release_date) document.getElementById("ed-year").value = d.release_date.slice(0, 4);
-    const list = (d.tracks && d.tracks.data) ? d.tracks.data : [];
-    if (list.length) {
-      tracks = list.map(x => ({ title: x.title, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+    let allTracks = [];
+    if (d.media && d.media.length) {
+      d.media.forEach(m => {
+        if (m.tracks) allTracks = allTracks.concat(m.tracks);
+      });
+    }
+    if (allTracks.length) {
+      tracks = allTracks.map(x => ({ title: x.title, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
       renderTracks();
     } else {
-      alert("Nessuna traccia trovata per questo album.");
+      alert("Nessuna traccia trovata per questa edizione, scegli un'altra versione dall'elenco.");
     }
   } catch (e) {
     document.getElementById("search-results").innerHTML = "";
