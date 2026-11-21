@@ -363,20 +363,70 @@ function togglePasteArea() {
 function importPastedTracks() {
   const el = document.getElementById("paste-box");
   if (!el) return;
-  const lines = el.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-  const titles = [];
-  for (let line of lines) {
+  const raw = el.value;
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (!lines.length) return;
+
+  // 1. Estrazione automatica Artista, Titolo Album e Anno se incollata pagina RYM (Cmd+A)
+  const byIdx = lines.findIndex(l => /^by\s+/i.test(l));
+  if (byIdx > 0 && byIdx < 40) {
+    const possibleTitle = lines.at(byIdx - 1);
+    const possibleArtist = lines.at(byIdx).replace(/^by\s+/i, "").trim();
+    if (possibleTitle && possibleArtist && !/rate your music|log in|sign up/i.test(possibleTitle)) {
+      document.getElementById("ed-title").value = possibleTitle;
+      document.getElementById("ed-artist").value = possibleArtist;
+    }
+  }
+  const relIdx = lines.findIndex(l => /^Released$/i.test(l));
+  if (relIdx >= 0 && lines.at(relIdx + 1)) {
+    const mYear = lines.at(relIdx + 1).match(/\b(19\d{2}|20\d{2})\b/);
+    if (mYear) document.getElementById("ed-year").value = mYear.at(1);
+  }
+
+  // 2. Isolamento sezione Track listing (se presente)
+  let startIdx = lines.findIndex(l => /^Track listing$/i.test(l));
+  let endIdx = lines.findIndex((l, idx) => idx > startIdx && /^(Credits|Reviews|Lists|Catalog|Comments|Recommendations|Total length)/i.test(l));
+  const targetLines = (startIdx >= 0) ? lines.slice(startIdx + 1, endIdx > startIdx ? endIdx : lines.length) : lines;
+
+  // 3. Parsing tracce, durate e voti RYM
+  const parsed = [];
+  let pendingTitle = null;
+
+  for (let i = 0; i < targetLines.length; i++) {
+    let line = targetLines.at(i);
     if (/^\d{1,2}\.?$/.test(line)) continue;
     if (/^\d{1,2}:\d{2}$/.test(line)) continue;
-    if (/^\d[\.,]\d{2}$/.test(line)) continue;
-    let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
-    if (clean.length > 0) titles.push(clean);
+    if (/^(Featured on|Rating|Tracks)$/i.test(line)) continue;
+
+    // Se la riga è solo un voto RYM (es. 3.85) collegato alla traccia appena letta
+    if (/^[0-4][\.,]\d{2}$/.test(line) && parsed.length > 0) {
+      parsed.at(-1).rymRaw = line;
+      continue;
+    }
+
+    let rymVal = "";
+    const mRym = line.match(/\b([0-4][\.,]\d{2})\b/);
+    if (mRym) {
+      rymVal = mRym.at(1);
+      line = line.replace(mRym.at(0), "").trim();
+    }
+
+    let clean = line
+      .replace(/^\d+[\.\)\-\s]+/, "")
+      .replace(/\s+\d{1,2}:\d{2}$/, "")
+      .trim();
+
+    if (clean.length > 0 && !/^(Rate Your Music|Log in|Sign up|Genres|Descriptors|Language)/i.test(clean)) {
+      parsed.push({ title: clean, inf: 6.5, sup: 6.5, rymRaw: rymVal, rym: 0, note: "" });
+    }
   }
-  if (!titles.length) {
-    alert("Nessun titolo valido trovato nel testo incollato.");
+
+  if (!parsed.length) {
+    alert("Nessuna traccia trovata nel testo incollato.");
     return;
   }
-  tracks = titles.map(t => ({ title: t, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+
+  tracks = parsed;
   document.getElementById("search-results").innerHTML = "";
   renderTracks();
 }
