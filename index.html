@@ -72,7 +72,7 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 </div></div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
 <span style="font-size:.8rem;color:var(--muted)">Voto <b>0</b> = Interludio | Voto <b>RYM</b> (es. 3,79) = curva 1–10 automatica</span>
-<div style="display:flex;gap:6px"><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="copyInfToSup()">Copia Inf → Sup</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="addTrack()">+ Traccia</button></div>
+<div style="display:flex;gap:6px"><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="copyInfToSup()">Copia Inf → Sup</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="togglePasteArea()">📋 Incolla Tracklist</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="addTrack()">+ Traccia</button></div>
 </div>
 <div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Titolo Traccia</th><th style="text-align:center">Inf.</th><th style="text-align:center">Sup.</th><th style="text-align:center">RYM</th><th>Curva (1–10)</th><th>Note</th><th></th></tr></thead><tbody id="tracks-body"></tbody></table></div>
 </div><div>
@@ -360,6 +360,36 @@ async function loadAlbumTracks(it) {
   }
 }
 
+function togglePasteArea() {
+  const box = document.getElementById("search-results");
+  if (document.getElementById("paste-box")) {
+    box.innerHTML = "";
+  } else {
+    box.innerHTML = `<div style="width:100%"><textarea id="paste-box" rows="5" style="width:100%;margin-top:6px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px" placeholder="Incolla qui la tracklist copiata da RYM, Spotify o Apple Music..."></textarea><button class="btn" style="margin-top:6px" onclick="importPastedTracks()">Importa Tracce</button></div>`;
+  }
+}
+
+function importPastedTracks() {
+  const el = document.getElementById("paste-box");
+  if (!el) return;
+  const lines = el.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const titles = [];
+  for (let line of lines) {
+    if (/^\d{1,2}\.?$/.test(line)) continue;
+    if (/^\d{1,2}:\d{2}$/.test(line)) continue;
+    if (/^\d[\.,]\d{2}$/.test(line)) continue;
+    let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
+    if (clean.length > 0) titles.push(clean);
+  }
+  if (!titles.length) {
+    alert("Nessun titolo valido trovato nel testo incollato.");
+    return;
+  }
+  tracks = titles.map(t => ({ title: t, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+  document.getElementById("search-results").innerHTML = "";
+  renderTracks();
+}
+  
 function saveToArchive() {
   const artist = document.getElementById("ed-artist").value.trim() || "Artista";
   const title = document.getElementById("ed-title").value.trim() || "Album";
