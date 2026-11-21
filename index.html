@@ -297,43 +297,72 @@ function recalc() {
 async function searchAlbum() {
   const a = document.getElementById("q-artist").value.trim();
   const b = document.getElementById("q-album").value.trim();
-  const q = encodeURIComponent(`${a} ${b}`.trim());
-  if (!q) return;
+  if (!a && !b) return;
   const box = document.getElementById("search-results");
-  box.innerHTML = "<span style='color:var(--muted)'>Ricerca in corso...</span>";
+  box.innerHTML = "<span style='color:var(--muted)'>Ricerca su MusicBrainz...</span>";
   try {
-    const r = await fetch(`https://apple.com{q}&entity=album&limit=6`);
+    let queryParts = [];
+    if (a) queryParts.push(`artist:"${a}"`);
+    if (b) queryParts.push(`release:"${b}"`);
+    const q = encodeURIComponent(queryParts.join(" AND "));
+    const r = await fetch(`https://musicbrainz.org{q}&fmt=json&limit=8`, {
+      headers: { "Accept": "application/json" }
+    });
     const d = await r.json();
     box.innerHTML = "";
-    d.results.forEach(item => {
+    if (!d.releases || !d.releases.length) {
+      box.innerHTML = "<span style='color:var(--warn)'>Nessun album trovato.</span>";
+      return;
+    }
+    d.releases.forEach(item => {
+      const artistName = (item["artist-credit"] && item["artist-credit"][0]) ? item["artist-credit"][0].name : a;
+      const year = (item.date || "").slice(0, 4);
+      const count = item["track-count"] ? `${item["track-count"]} tracce` : "";
+      const coverUrl = `https://coverartarchive.org{item.id}/front-250`;
       const div = document.createElement("div");
       div.className = "res-item";
-      div.innerHTML = `<img src="${item.artworkUrl100}"><div><b>${item.collectionName}</b><br><span style="font-size:.8rem;color:var(--muted)">${item.artistName} (${(item.releaseDate || "").slice(0, 4)})</span></div>`;
-      div.onclick = () => loadAlbumTracks(item);
+      div.innerHTML = `<img src="${coverUrl}" onerror="this.style.display='none'"><div><b>${item.title}</b><br><span style="font-size:.8rem;color:var(--muted)">${artistName} ${year ? `(${year})` : ""} ${count ? `• ${count}` : ""}</span></div>`;
+      div.onclick = () => loadAlbumTracks({ id: item.id, title: item.title, artist: artistName, year: year, cover: coverUrl });
       box.appendChild(div);
     });
   } catch (e) {
-    box.innerHTML = "<span style='color:var(--danger)'>Errore di rete.</span>";
+    box.innerHTML = "<span style='color:var(--danger)'>Errore di rete durante la ricerca.</span>";
   }
 }
 
 async function loadAlbumTracks(it) {
-  document.getElementById("ed-artist").value = it.artistName;
-  document.getElementById("ed-title").value = it.collectionName;
-  document.getElementById("ed-year").value = (it.releaseDate || "").slice(0, 4);
-  currentCover = it.artworkUrl100.replace("100x100", "300x300");
-  document.getElementById("album-cover").src = currentCover;
-  document.getElementById("search-results").innerHTML = "";
+  document.getElementById("ed-artist").value = it.artist;
+  document.getElementById("ed-title").value = it.title;
+  document.getElementById("ed-year").value = it.year;
+  currentCover = it.cover;
+  const imgEl = document.getElementById("album-cover");
+  imgEl.onerror = () => { imgEl.src = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E"; };
+  imgEl.src = currentCover;
+  document.getElementById("search-results").innerHTML = "<span style='color:var(--muted)'>Caricamento tracce...</span>";
   try {
-    const r = await fetch(`https://apple.com{it.collectionId}&entity=song`);
+    const r = await fetch(`https://musicbrainz.org{it.id}?inc=recordings&fmt=json`, {
+      headers: { "Accept": "application/json" }
+    });
     const d = await r.json();
-    const s = d.results.filter(x => x.wrapperType === "track");
-    if (s.length) {
-      tracks = s.map(x => ({ title: x.trackName, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
-      renderTracks();
+    document.getElementById("search-results").innerHTML = "";
+    let allTracks = [];
+    if (d.media && d.media.length) {
+      d.media.forEach(m => {
+        if (m.tracks) allTracks = allTracks.concat(m.tracks);
+      });
     }
-  } catch (e) { alert("Tracklist non disponibile."); }
+    if (allTracks.length) {
+      tracks = allTracks.map(x => ({ title: x.title, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+      renderTracks();
+    } else {
+      alert("Nessuna traccia trovata per questa edizione, prova un'altra versione dall'elenco.");
+    }
+  } catch (e) {
+    document.getElementById("search-results").innerHTML = "";
+    alert("Impossibile caricare la tracklist.");
+  }
 }
+
 
 function saveToArchive() {
   const artist = document.getElementById("ed-artist").value.trim() || "Artista";
