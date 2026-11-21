@@ -476,7 +476,111 @@ function exportCSV() {
   link.click();
 }
 
+const GH_REPO = "matteochiariotti-design/valuta-dischi";
+const GH_FILE = "archivio.json";
+
+function setGhStatus(msg, isErr) {
+  const el = document.getElementById("gh-status");
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = isErr ? "var(--danger)" : "var(--accent2)";
+}
+
+function saveGhToken() {
+  const tok = document.getElementById("gh-token").value.trim();
+  localStorage.setItem("ar_gh_token", tok);
+  if (tok) pullFromGithub();
+}
+
+async function pullFromGithub() {
+  const tok = localStorage.getItem("ar_gh_token") || "";
+  if (document.getElementById("gh-token")) document.getElementById("gh-token").value = tok;
+  if (!tok) return;
+  setGhStatus("Sincronizzazione in corso...", false);
+  try {
+    const r = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}?t=${Date.now()}`, {
+      headers: { "Authorization": `Bearer ${tok}`, "Accept": "application/vnd.github+json" }
+    });
+    if (r.status === 404) {
+      await pushToGithub();
+      return;
+    }
+    if (!r.ok) throw new Error("Token non valido");
+    const data = await r.json();
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+    const remoteList = JSON.parse(decoded);
+    if (Array.isArray(remoteList)) {
+      archive = remoteList;
+      localStorage.setItem("ar_archive", JSON.stringify(archive));
+      updateArchCount();
+      populateYearFilter();
+      renderArchive();
+      setGhStatus("✓ Sincronizzato con GitHub", false);
+    }
+  } catch (e) {
+    setGhStatus("Errore sync: " + e.message, true);
+  }
+}
+
+async function pushToGithub() {
+  const tok = localStorage.getItem("ar_gh_token") || "";
+  if (!tok) return;
+  setGhStatus("Salvataggio su GitHub...", false);
+  try {
+    let sha = null;
+    const check = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}?t=${Date.now()}`, {
+      headers: { "Authorization": `Bearer ${tok}`, "Accept": "application/vnd.github+json" }
+    });
+    if (check.ok) {
+      const existing = await check.json();
+      sha = existing.sha;
+    }
+    const jsonStr = JSON.stringify(archive, null, 2);
+    const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    const body = { message: "Aggiorna archivio dischi", content: b64 };
+    if (sha) body.sha = sha;
+    const res = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${tok}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Salvataggio fallito");
+    setGhStatus("✓ Salvato su GitHub", false);
+  } catch (e) {
+    setGhStatus("Errore salvataggio: " + e.message, true);
+  }
+}
+
+function saveToArchive() {
+  const artist = document.getElementById("ed-artist").value.trim() || "Artista";
+  const title = document.getElementById("ed-title").value.trim() || "Album";
+  const year = document.getElementById("ed-year").value.trim();
+  const finalScore = parseFloat(document.getElementById("res-final").textContent);
+  const id = `${artist.toLowerCase()}::${title.toLowerCase()}`;
+  const entry = { id, artist, title, year, cover: currentCover, finalScore, tracks: JSON.parse(JSON.stringify(tracks)), date: new Date().toISOString() };
+  const idx = archive.findIndex(a => a.id === id);
+  if (idx >= 0) archive.splice(idx, 1, entry); else archive.unshift(entry);
+  localStorage.setItem("ar_archive", JSON.stringify(archive));
+  updateArchCount();
+  pushToGithub();
+  alert(`Salvato: ${artist} - ${title} (${finalScore.toFixed(3)})`);
+}
+
+function deleteFromArchive(id) {
+  archive = archive.filter(a => a.id !== id);
+  localStorage.setItem("ar_archive", JSON.stringify(archive));
+  updateArchCount();
+  populateYearFilter();
+  renderArchive();
+  pushToGithub();
+}
+
 init();
+pullFromGithub();
 </script>
 </body>
 </html>
