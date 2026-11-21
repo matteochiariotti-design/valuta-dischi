@@ -298,24 +298,15 @@ function jsonpRequest(url) {
   return new Promise((resolve, reject) => {
     const cbName = "cb_" + Math.random().toString(36).slice(2);
     const script = document.createElement("script");
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error("Timeout ricerca"));
-    }, 10000);
+    const timer = setTimeout(() => { cleanup(); reject(new Error("Timeout")); }, 9000);
     function cleanup() {
       clearTimeout(timer);
       delete window[cbName];
       if (script.parentNode) script.parentNode.removeChild(script);
     }
-    window[cbName] = (data) => {
-      cleanup();
-      resolve(data);
-    };
-    script.onerror = () => {
-      cleanup();
-      reject(new Error("Connessione bloccata"));
-    };
-    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error("Bloccato dal browser/AdBlock")); };
+    script.src = url + (url.includes("?") ? "&" : "?") + "output=jsonp&callback=" + cbName;
     document.body.appendChild(script);
   });
 }
@@ -326,41 +317,53 @@ async function searchAlbum() {
   const q = encodeURIComponent(`${a} ${b}`.trim());
   if (!q) return;
   const box = document.getElementById("search-results");
-  box.innerHTML = "<span style='color:var(--muted)'>Ricerca in corso...</span>";
+  box.innerHTML = "<span style='color:var(--muted)'>Ricerca su Deezer...</span>";
   try {
-    const d = await jsonpRequest(`https://apple.com{q}&entity=album&limit=8`);
+    const d = await jsonpRequest(`https://deezer.com{q}&limit=8`);
     box.innerHTML = "";
-    if (!d.results || !d.results.length) {
+    if (!d.data || !d.data.length) {
       box.innerHTML = "<span style='color:var(--warn)'>Nessun album trovato.</span>";
       return;
     }
-    d.results.forEach(item => {
+    d.data.forEach(item => {
       const div = document.createElement("div");
       div.className = "res-item";
-      const year = (item.releaseDate || "").slice(0, 4);
-      const count = item.trackCount ? `${item.trackCount} tracce` : "";
-      div.innerHTML = `<img src="${item.artworkUrl100}"><div><b>${item.collectionName}</b><br><span style="font-size:.8rem;color:var(--muted)">${item.artistName} ${year ? `(${year})` : ""} ${count ? `• ${count}` : ""}</span></div>`;
+      const artistName = item.artist ? item.artist.name : a;
+      const count = item.nb_tracks ? `${item.nb_tracks} tracce` : "";
+      div.innerHTML = `<img src="${item.cover_medium || item.cover}"><div><b>${item.title}</b><br><span style="font-size:.8rem;color:var(--muted)">${artistName} ${count ? `• ${count}` : ""}</span></div>`;
       div.onclick = () => loadAlbumTracks(item);
       box.appendChild(div);
     });
   } catch (e) {
-    box.innerHTML = "<span style='color:var(--danger)'>Errore: " + e.message + "</span>";
+    box.innerHTML = `<span style='color:var(--warn)'>Ricerca automatica bloccata dal browser (${e.message}). Puoi incollare la tracklist qui sotto:</span><br><textarea id="paste-box" rows="4" style="width:100%;margin-top:6px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px" placeholder="Incolla qui i titoli delle tracce (uno per riga)..."></textarea><button class="btn" style="margin-top:6px" onclick="importPastedTracks()">Importa Tracce Incollate</button>`;
   }
 }
 
+function importPastedTracks() {
+  const raw = document.getElementById("paste-box").value;
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  if (!lines.length) return;
+  tracks = lines.map(line => {
+    let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
+    return { title: clean || line, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" };
+  });
+  document.getElementById("search-results").innerHTML = "";
+  renderTracks();
+}
+
 async function loadAlbumTracks(it) {
-  document.getElementById("ed-artist").value = it.artistName;
-  document.getElementById("ed-title").value = it.collectionName;
-  document.getElementById("ed-year").value = (it.releaseDate || "").slice(0, 4);
-  currentCover = it.artworkUrl100.replace("100x100", "300x300");
-  document.getElementById("album-cover").src = currentCover;
+  document.getElementById("ed-artist").value = it.artist ? it.artist.name : "";
+  document.getElementById("ed-title").value = it.title || "";
+  currentCover = it.cover_big || it.cover_medium || "";
+  if (currentCover) document.getElementById("album-cover").src = currentCover;
   document.getElementById("search-results").innerHTML = "<span style='color:var(--muted)'>Caricamento tracce...</span>";
   try {
-    const d = await jsonpRequest(`https://apple.com{it.collectionId}&entity=song`);
+    const d = await jsonpRequest(`https://deezer.com{it.id}`);
     document.getElementById("search-results").innerHTML = "";
-    const s = (d.results || []).filter(x => x.wrapperType === "track");
-    if (s.length) {
-      tracks = s.map(x => ({ title: x.trackName, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
+    if (d.release_date) document.getElementById("ed-year").value = d.release_date.slice(0, 4);
+    const list = (d.tracks && d.tracks.data) ? d.tracks.data : [];
+    if (list.length) {
+      tracks = list.map(x => ({ title: x.title, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
       renderTracks();
     } else {
       alert("Nessuna traccia trovata per questo album.");
