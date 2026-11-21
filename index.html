@@ -411,7 +411,20 @@ function renderArchive() {
   list.forEach((a, i) => {
     const div = document.createElement("div");
     div.className = "archive-item";
-    div.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><b style="color:var(--muted)">#${i + 1}</b>${a.cover ? `<img src="${a.cover}" style="width:44px;height:44px;border-radius:6px">` : ''}<div><b>${a.artist} - ${a.title}</b> ${a.year ? `(${a.year})` : ''}<br><span style="font-size:.8rem;color:var(--muted)">${a.tracks.length} tracce</span></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:1.25rem;font-weight:800;color:var(--accent2)">${a.finalScore.toFixed(3)}</span><button class="btn btn-sec" style="padding:5px 9px" onclick="loadFromArchive('${a.id}')">Apri</button><button class="btn btn-del" onclick="deleteFromArchive('${a.id}')">✕</button></div>`;
+    const coverSrc = a.cover || DEFAULT_COVER;
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0">
+        <b style="color:var(--muted);font-size:1.05rem;min-width:26px">#${i + 1}</b>
+        <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
+        <div>
+          <div style="font-size:1.05rem;margin-bottom:6px"><b>${a.artist} - ${a.title}</b> ${a.year ? `<span style="color:var(--muted)">(${a.year})</span>` : ''}</div>
+          <span style="display:inline-block;font-size:1.25rem;font-weight:800;color:var(--accent2);background:#14261c;padding:3px 10px;border-radius:7px;border:1px solid #224431">${a.finalScore.toFixed(3)}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <button class="btn btn-sec" style="padding:6px 11px" onclick="loadFromArchive('${a.id}')">Apri</button>
+        <button class="btn btn-del" onclick="deleteFromArchive('${a.id}')">✕</button>
+      </div>`;
     box.appendChild(div);
   });
 }
