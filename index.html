@@ -301,13 +301,11 @@ async function searchAlbum() {
   const box = document.getElementById("search-results");
   box.innerHTML = "<span style='color:var(--muted)'>Ricerca su MusicBrainz...</span>";
   try {
-    let queryParts = [];
-    if (a) queryParts.push(`artist:"${a}"`);
-    if (b) queryParts.push(`release:"${b}"`);
-    const q = encodeURIComponent(queryParts.join(" AND "));
-    const r = await fetch(`https://musicbrainz.org{q}&fmt=json&limit=8`, {
-      headers: { "Accept": "application/json" }
-    });
+    const parts = [];
+    if (a) parts.push(`artist:"${a}"`);
+    if (b) parts.push(`release:"${b}"`);
+    const q = encodeURIComponent(parts.join(" AND "));
+    const r = await fetch(`https://musicbrainz.org{q}&fmt=json&limit=8`);
     const d = await r.json();
     box.innerHTML = "";
     if (!d.releases || !d.releases.length) {
@@ -315,7 +313,9 @@ async function searchAlbum() {
       return;
     }
     d.releases.forEach(item => {
-      const artistName = (item["artist-credit"] && item["artist-credit"][0]) ? item["artist-credit"][0].name : a;
+      const credits = item["artist-credit"] || [];
+      const firstCredit = credits.at(0);
+      const artistName = firstCredit ? firstCredit.name : a;
       const year = (item.date || "").slice(0, 4);
       const count = item["track-count"] ? `${item["track-count"]} tracce` : "";
       const coverUrl = `https://coverartarchive.org{item.id}/front-250`;
@@ -326,7 +326,7 @@ async function searchAlbum() {
       box.appendChild(div);
     });
   } catch (e) {
-    box.innerHTML = "<span style='color:var(--danger)'>Errore di rete durante la ricerca.</span>";
+    box.innerHTML = "<span style='color:var(--danger)'>Errore: " + e.message + "</span>";
   }
 }
 
@@ -340,9 +340,7 @@ async function loadAlbumTracks(it) {
   imgEl.src = currentCover;
   document.getElementById("search-results").innerHTML = "<span style='color:var(--muted)'>Caricamento tracce...</span>";
   try {
-    const r = await fetch(`https://musicbrainz.org{it.id}?inc=recordings&fmt=json`, {
-      headers: { "Accept": "application/json" }
-    });
+    const r = await fetch(`https://musicbrainz.org{it.id}?inc=recordings&fmt=json`);
     const d = await r.json();
     document.getElementById("search-results").innerHTML = "";
     let allTracks = [];
@@ -359,9 +357,10 @@ async function loadAlbumTracks(it) {
     }
   } catch (e) {
     document.getElementById("search-results").innerHTML = "";
-    alert("Impossibile caricare la tracklist.");
+    alert("Impossibile caricare la tracklist: " + e.message);
   }
 }
+
 
 
 function saveToArchive() {
