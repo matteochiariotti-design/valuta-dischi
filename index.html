@@ -382,20 +382,6 @@ function importPastedTracks() {
   renderTracks();
 }
 
-function saveToArchive() {
-  const artist = document.getElementById("ed-artist").value.trim() || "Artista";
-  const title = document.getElementById("ed-title").value.trim() || "Album";
-  const year = document.getElementById("ed-year").value.trim();
-  const finalScore = parseFloat(document.getElementById("res-final").textContent);
-  const id = `${artist.toLowerCase()}::${title.toLowerCase()}`;
-  const entry = { id, artist, title, year, cover: currentCover, finalScore, tracks: JSON.parse(JSON.stringify(tracks)), date: new Date().toISOString() };
-  const idx = archive.findIndex(a => a.id === id);
-  if (idx >= 0) archive.splice(idx, 1, entry); else archive.unshift(entry);
-  localStorage.setItem("ar_archive", JSON.stringify(archive));
-  updateArchCount();
-  alert(`Salvato: ${artist} - ${title} (${finalScore.toFixed(3)})`);
-}
-
 function updateArchCount() { document.getElementById("arch-count").textContent = archive.length; }
 
 function populateYearFilter() {
@@ -450,14 +436,6 @@ function loadFromArchive(id) {
   tracks = JSON.parse(JSON.stringify(it.tracks));
   renderTracks();
   document.querySelector(".tab-btn").click();
-}
-
-function deleteFromArchive(id) {
-  archive = archive.filter(a => a.id !== id);
-  localStorage.setItem("ar_archive", JSON.stringify(archive));
-  updateArchCount();
-  populateYearFilter();
-  renderArchive();
 }
 
 function exportCSV() {
