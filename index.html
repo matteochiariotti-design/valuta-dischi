@@ -17,20 +17,21 @@ h1{margin:0;font-size:1.4rem}.tabs{display:flex;gap:8px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
 .search-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 input,select{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.92rem}
-input:focus{outline:none;border-color:var(--accent)}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
 .btn{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;font-size:.88rem}
 .btn-sec{background:var(--card2);border:1px solid var(--border);color:var(--text)}
 .btn-ok{background:#16a34a}.btn-del{background:#dc2626;padding:5px 9px;font-size:.8rem}
 .album-header{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-.cover{width:80px;height:80px;border-radius:10px;object-fit:cover;background:var(--card2);border:1px solid var(--border)}
+.cover{width:92px;height:92px;border-radius:10px;object-fit:cover;background:var(--card2);border:1px solid var(--border)}
 .grid-main{display:grid;grid-template-columns:1.8fr 1fr;gap:16px}
 @media(max-width:950px){.grid-main{grid-template-columns:1fr}}
 table{width:100%;border-collapse:collapse;font-size:.88rem}
 th{text-align:left;color:var(--muted);padding:7px 5px;border-bottom:1px solid var(--border)}
 td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
+.vote-sel{width:76px;text-align:center;font-weight:700;padding:6px 4px;cursor:pointer}
 .num-input{width:62px;text-align:center;font-weight:700;padding:5px}
 .rym-input{width:68px;text-align:center;padding:5px;color:#93c5fd;font-weight:600}
-.title-input{width:100%;min-width:120px;padding:5px 7px}.note-input{width:65px;padding:5px 7px}
+.title-input{width:100%;min-width:120px;padding:6px 8px}.note-input{width:65px;padding:6px 8px}
 .rym-bars{display:flex;gap:2px;align-items:center}
 .rym-dot{width:12px;height:18px;border-radius:3px;background:var(--card2);border:1px solid var(--border)}
 .rym-dot.on{background:var(--accent);border-color:var(--accent)}
@@ -45,8 +46,6 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 .stat-line span:last-child{color:var(--text);font-weight:600}
 .badge-ok{color:var(--accent2)!important}.badge-no{color:var(--warn)!important}
 .search-results{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-.res-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);padding:8px;border-radius:8px;cursor:pointer;max-width:310px}
-.res-item:hover{border-color:var(--accent)}.res-item img{width:44px;height:44px;border-radius:6px;object-fit:cover}
 .archive-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
 </style>
 </head>
@@ -57,25 +56,30 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 <button class="tab-btn" onclick="switchTab('archive',this)">Archivio (<span id="arch-count">0</span>)</button>
 <button class="tab-btn" onclick="switchTab('settings',this)">Formule</button>
 </div></header>
+
 <div id="tab-editor" class="panel active">
-<div class="card"><div class="search-row">
-<input id="q-artist" placeholder="Artista (es. Fontaines D.C.)" style="flex:1;min-width:150px">
-<input id="q-album" placeholder="Titolo Album (es. Romance)" style="flex:1;min-width:150px">
-<button class="btn" onclick="searchAlbum()">🔍 Cerca Tracklist</button>
-<button class="btn btn-sec" onclick="resetAlbum()">+ Nuovo Vuoto</button>
-</div><div id="search-results" class="search-results"></div></div>
 <div class="grid-main"><div class="card"><div class="album-header">
 <img id="album-cover" class="cover" src="data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E">
 <div style="flex:1;display:flex;flex-direction:column;gap:6px">
 <input id="ed-artist" placeholder="Nome Artista" style="font-weight:700">
-<div style="display:flex;gap:8px"><input id="ed-title" placeholder="Titolo Album" style="flex:1"><input id="ed-year" placeholder="Anno" style="width:75px"></div>
+<div style="display:flex;gap:8px"><input id="ed-title" placeholder="Titolo Album" style="flex:1"><input id="ed-year" placeholder="Anno (es. 2026)" style="width:110px"></div>
+<input id="ed-cover-url" placeholder="Incolla URL Copertina (tasto destro su immagine -> Copia indirizzo immagine)" oninput="setCoverUrl(this.value)" style="font-size:.82rem">
 </div></div>
+
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-<span style="font-size:.8rem;color:var(--muted)">Voto <b>0</b> = Interludio | Voto <b>RYM</b> (es. 3,79) = curva 1–10 automatica</span>
-<div style="display:flex;gap:6px"><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="copyInfToSup()">Copia Inf → Sup</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="togglePasteArea()">📋 Incolla Tracklist</button><button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="addTrack()">+ Traccia</button></div>
+<span style="font-size:.8rem;color:var(--muted)"><b>0 (Int.)</b> = escluso | <b>RYM</b> (es. 3,79) = curva 1–10 auto</span>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="resetAlbum()">+ Nuovo</button>
+<button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="copyInfToSup()">Copia Inf → Sup</button>
+<button class="btn" style="padding:5px 9px;font-size:.8rem" onclick="togglePasteArea()">📋 Incolla Tracklist</button>
+<button class="btn btn-sec" style="padding:5px 9px;font-size:.8rem" onclick="addTrack()">+ Traccia</button>
 </div>
+</div>
+<div id="search-results" class="search-results" style="margin-bottom:10px"></div>
 <div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Titolo Traccia</th><th style="text-align:center">Inf.</th><th style="text-align:center">Sup.</th><th style="text-align:center">RYM</th><th>Curva (1–10)</th><th>Note</th><th></th></tr></thead><tbody id="tracks-body"></tbody></table></div>
-</div><div>
+</div>
+
+<div>
 <div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button></div></div>
 <div class="stat-grid">
 <div class="stat-box"><h4>Media Inferiore</h4>
@@ -104,11 +108,17 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 <div class="stat-line"><span>4.0–4.9 (N×<span class="lbl-m2">2</span>):</span><span id="det-m2">0 | 0</span></div>
 <div class="stat-line"><span>&lt; 4.0 (N×<span class="lbl-m3">1</span>):</span><span id="det-m3">0 | 0</span></div>
 </div></div></div></div>
+
 <div id="tab-archive" class="panel"><div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-<input id="arch-filter" placeholder="Filtra artista o album..." oninput="renderArchive()" style="flex:1;min-width:180px">
-<div style="display:flex;gap:8px"><select id="arch-sort" onchange="renderArchive()"><option value="score">Voto (Alto → Basso)</option><option value="date">Data</option><option value="artist">Artista</option></select><button class="btn btn-sec" onclick="exportCSV()">📥 CSV</button></div>
+<input id="arch-filter" placeholder="Filtra artista o album..." oninput="renderArchive()" style="flex:1;min-width:160px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<select id="arch-year" onchange="renderArchive()"><option value="">Tutti gli anni</option></select>
+<select id="arch-sort" onchange="renderArchive()"><option value="score">Classifica (Alto → Basso)</option><option value="date">Data inserimento</option><option value="artist">Artista (A → Z)</option></select>
+<button class="btn btn-sec" onclick="exportCSV()">📥 CSV</button>
+</div>
 </div><div id="archive-list"></div></div></div>
+
 <div id="tab-settings" class="panel"><div class="card"><h3 style="margin-top:0">Moltiplicatori al Denominatore: Brani / (N × Moltiplicatore)</h3>
 <div class="stat-grid"><div class="stat-box"><h4>Bonus (attivi se brani ≥ 7.0 sono ≥ 50%)</h4>
 <div class="stat-line"><span>7.0–7.4:</span><input type="number" step="0.5" id="cfg-b1" value="3" class="num-input" onchange="saveCfg()"></div>
@@ -121,6 +131,9 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 <div class="stat-line"><span>&lt; 4.0:</span><input type="number" step="0.5" id="cfg-m3" value="1" class="num-input" onchange="saveCfg()"></div>
 </div></div></div></div></div>
 <script>
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E";
+const VOTE_OPTIONS = [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5.5, 5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0];
+
 let tracks = [];
 let currentCover = "";
 let cfg = JSON.parse(localStorage.getItem("ar_cfg") || '{"b1":3,"b2":2,"b3":1,"b4":0.5,"m1":3,"m2":2,"m3":1}');
@@ -151,15 +164,26 @@ function switchTab(n, b) {
   document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
   document.getElementById("tab-" + n).classList.add("active");
   b.classList.add("active");
-  if (n === "archive") renderArchive();
+  if (n === "archive") {
+    populateYearFilter();
+    renderArchive();
+  }
+}
+
+function setCoverUrl(url) {
+  currentCover = url.trim();
+  const img = document.getElementById("album-cover");
+  img.onerror = () => { img.src = DEFAULT_COVER; };
+  img.src = currentCover || DEFAULT_COVER;
 }
 
 function resetAlbum() {
   document.getElementById("ed-artist").value = "";
   document.getElementById("ed-title").value = "";
   document.getElementById("ed-year").value = "";
+  document.getElementById("ed-cover-url").value = "";
   currentCover = "";
-  document.getElementById("album-cover").src = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E";
+  document.getElementById("album-cover").src = DEFAULT_COVER;
   tracks = Array.from({length: 10}, (_, i) => ({
     title: `Traccia ${i + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: ""
   }));
@@ -180,6 +204,15 @@ function removeTrack(i) {
 function copyInfToSup() {
   tracks.forEach(t => t.sup = t.inf);
   renderTracks();
+}
+
+function buildVoteSelect(idx, field, currentVal) {
+  let opts = VOTE_OPTIONS.map(v => {
+    const lbl = v === 0 ? "0 (Int.)" : v.toString();
+    const sel = (Number(currentVal) === v) ? "selected" : "";
+    return `<option value="${v}" ${sel}>${lbl}</option>`;
+  }).join("");
+  return `<select class="vote-sel" onchange="tracks[${idx}].${field}=parseFloat(this.value);recalc()">${opts}</select>`;
 }
 
 function onRymInput(i, v) {
@@ -236,8 +269,8 @@ function renderTracks() {
     tr.innerHTML = `
       <td style="color:var(--muted)">${i + 1}</td>
       <td><input class="title-input" value="${t.title.replace(/"/g, '&quot;')}" oninput="tracks[${i}].title=this.value"></td>
-      <td style="text-align:center"><input type="number" step="0.5" min="0" max="10" class="num-input" value="${t.inf}" oninput="tracks[${i}].inf=parseFloat(this.value)||0;recalc()"></td>
-      <td style="text-align:center"><input type="number" step="0.5" min="0" max="10" class="num-input" value="${t.sup}" oninput="tracks[${i}].sup=parseFloat(this.value)||0;recalc()"></td>
+      <td style="text-align:center">${buildVoteSelect(i, 'inf', t.inf)}</td>
+      <td style="text-align:center">${buildVoteSelect(i, 'sup', t.sup)}</td>
       <td style="text-align:center"><input class="rym-input" placeholder="3,79" value="${t.rymRaw || ''}" oninput="onRymInput(${i},this.value)"></td>
       <td id="rym-cell-${i}">${b}</td>
       <td><input class="note-input" value="${t.note}" oninput="tracks[${i}].note=this.value"></td>
@@ -267,6 +300,7 @@ function calcSide(vals) {
   const malus = (m1 / (N * cfg.m1)) + (m2 / (N * cfg.m2)) + (m3 / (N * cfg.m3));
   return { sum, mat, ge7, N, bonus, malus, pond: mat + bonus - malus, c: Array.of(c1,c2,c3,c4), m: Array.of(m1,m2,m3) };
 }
+
 function recalc() {
   const inf = calcSide(tracks.map(t => t.inf));
   const sup = calcSide(tracks.map(t => t.sup));
@@ -293,64 +327,6 @@ function recalc() {
   for (let i = 0; i < 4; i++) document.getElementById(`det-b${i + 1}`).textContent = `${inf.c.at(i)} | ${sup.c.at(i)}`;
   for (let i = 0; i < 3; i++) document.getElementById(`det-m${i + 1}`).textContent = `${inf.m.at(i)} | ${sup.m.at(i)}`;
 }
-
-async function searchAlbum() {
-  const a = document.getElementById("q-artist").value.trim();
-  const b = document.getElementById("q-album").value.trim();
-  const q = encodeURIComponent(`${a} ${b}`.trim());
-  if (!q) return;
-  const box = document.getElementById("search-results");
-  box.innerHTML = "<span style='color:var(--muted)'>Ricerca in corso...</span>";
-  try {
-    const target = encodeURIComponent(`https://apple.com{q}&entity=album&limit=8`);
-    const r = await fetch(`https://allorigins.win{target}`);
-    const wrapper = await r.json();
-    const d = JSON.parse(wrapper.contents);
-    box.innerHTML = "";
-    if (!d.results || !d.results.length) {
-      box.innerHTML = "<span style='color:var(--warn)'>Nessun album trovato.</span>";
-      return;
-    }
-    d.results.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "res-item";
-      const year = (item.releaseDate || "").slice(0, 4);
-      const count = item.trackCount ? `${item.trackCount} tracce` : "";
-      div.innerHTML = `<img src="${item.artworkUrl100}"><div><b>${item.collectionName}</b><br><span style="font-size:.8rem;color:var(--muted)">${item.artistName} ${year ? `(${year})` : ""} ${count ? `• ${count}` : ""}</span></div>`;
-      div.onclick = () => loadAlbumTracks(item);
-      box.appendChild(div);
-    });
-  } catch (e) {
-    box.innerHTML = `<span style='color:var(--warn)'>Ricerca non disponibile (${e.message}). Usa il pulsante <b>📋 Incolla Tracklist</b> qui sotto!</span>`;
-  }
-}
-
-async function loadAlbumTracks(it) {
-  document.getElementById("ed-artist").value = it.artistName;
-  document.getElementById("ed-title").value = it.collectionName;
-  document.getElementById("ed-year").value = (it.releaseDate || "").slice(0, 4);
-  currentCover = it.artworkUrl100.replace("100x100", "300x300");
-  document.getElementById("album-cover").src = currentCover;
-  document.getElementById("search-results").innerHTML = "<span style='color:var(--muted)'>Caricamento tracce...</span>";
-  try {
-    const target = encodeURIComponent(`https://apple.com{it.collectionId}&entity=song`);
-    const r = await fetch(`https://allorigins.win{target}`);
-    const wrapper = await r.json();
-    const d = JSON.parse(wrapper.contents);
-    document.getElementById("search-results").innerHTML = "";
-    const s = (d.results || []).filter(x => x.wrapperType === "track");
-    if (s.length) {
-      tracks = s.map(x => ({ title: x.trackName, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" }));
-      renderTracks();
-    } else {
-      alert("Nessuna traccia trovata per questo album.");
-    }
-  } catch (e) {
-    document.getElementById("search-results").innerHTML = "";
-    alert("Errore caricamento tracce: " + e.message);
-  }
-}
-
 function togglePasteArea() {
   const box = document.getElementById("search-results");
   if (document.getElementById("paste-box")) {
@@ -363,74 +339,39 @@ function togglePasteArea() {
 function importPastedTracks() {
   const el = document.getElementById("paste-box");
   if (!el) return;
-  const raw = el.value;
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const lines = el.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   if (!lines.length) return;
-
-  // 1. Estrazione automatica Artista, Titolo Album e Anno se incollata pagina RYM (Cmd+A)
-  const byIdx = lines.findIndex(l => /^by\s+/i.test(l));
-  if (byIdx > 0 && byIdx < 40) {
-    const possibleTitle = lines.at(byIdx - 1);
-    const possibleArtist = lines.at(byIdx).replace(/^by\s+/i, "").trim();
-    if (possibleTitle && possibleArtist && !/rate your music|log in|sign up/i.test(possibleTitle)) {
-      document.getElementById("ed-title").value = possibleTitle;
-      document.getElementById("ed-artist").value = possibleArtist;
-    }
-  }
-  const relIdx = lines.findIndex(l => /^Released$/i.test(l));
-  if (relIdx >= 0 && lines.at(relIdx + 1)) {
-    const mYear = lines.at(relIdx + 1).match(/\b(19\d{2}|20\d{2})\b/);
-    if (mYear) document.getElementById("ed-year").value = mYear.at(1);
-  }
-
-  // 2. Isolamento sezione Track listing (se presente)
-  let startIdx = lines.findIndex(l => /^Track listing$/i.test(l));
-  let endIdx = lines.findIndex((l, idx) => idx > startIdx && /^(Credits|Reviews|Lists|Catalog|Comments|Recommendations|Total length)/i.test(l));
-  const targetLines = (startIdx >= 0) ? lines.slice(startIdx + 1, endIdx > startIdx ? endIdx : lines.length) : lines;
-
-  // 3. Parsing tracce, durate e voti RYM
   const parsed = [];
-  let pendingTitle = null;
-
-  for (let i = 0; i < targetLines.length; i++) {
-    let line = targetLines.at(i);
+  const skipExact = /^(Track\s*list(ing)?|Tracks|Rating|Featured on|Total length.*|Show all|Hide)$/i;
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines.at(i);
+    if (skipExact.test(line)) continue;
     if (/^\d{1,2}\.?$/.test(line)) continue;
     if (/^\d{1,2}:\d{2}$/.test(line)) continue;
-    if (/^(Featured on|Rating|Tracks)$/i.test(line)) continue;
-
-    // Se la riga è solo un voto RYM (es. 3.85) collegato alla traccia appena letta
-    if (/^[0-4][\.,]\d{2}$/.test(line) && parsed.length > 0) {
-      parsed.at(-1).rymRaw = line;
+    if (/^[0-4][\.,]\d{2}$/.test(line)) {
+      if (parsed.length > 0) parsed.at(-1).rymRaw = line;
       continue;
     }
-
     let rymVal = "";
     const mRym = line.match(/\b([0-4][\.,]\d{2})\b/);
     if (mRym) {
       rymVal = mRym.at(1);
       line = line.replace(mRym.at(0), "").trim();
     }
-
-    let clean = line
-      .replace(/^\d+[\.\)\-\s]+/, "")
-      .replace(/\s+\d{1,2}:\d{2}$/, "")
-      .trim();
-
-    if (clean.length > 0 && !/^(Rate Your Music|Log in|Sign up|Genres|Descriptors|Language)/i.test(clean)) {
+    let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
+    if (clean.length > 0) {
       parsed.push({ title: clean, inf: 6.5, sup: 6.5, rymRaw: rymVal, rym: 0, note: "" });
     }
   }
-
   if (!parsed.length) {
-    alert("Nessuna traccia trovata nel testo incollato.");
+    alert("Nessuna traccia valida trovata.");
     return;
   }
-
   tracks = parsed;
   document.getElementById("search-results").innerHTML = "";
   renderTracks();
 }
-  
+
 function saveToArchive() {
   const artist = document.getElementById("ed-artist").value.trim() || "Artista";
   const title = document.getElementById("ed-title").value.trim() || "Album";
@@ -447,14 +388,26 @@ function saveToArchive() {
 
 function updateArchCount() { document.getElementById("arch-count").textContent = archive.length; }
 
+function populateYearFilter() {
+  const sel = document.getElementById("arch-year");
+  const current = sel.value;
+  const years = [...new Set(archive.map(a => (a.year || "").trim()).filter(y => y.length > 0))].sort((a, b) => b.localeCompare(a));
+  sel.innerHTML = `<option value="">Tutti gli anni</option>` + years.map(y => `<option value="${y}" ${y === current ? 'selected' : ''}>Anno ${y}</option>`).join("");
+}
+
 function renderArchive() {
   const q = document.getElementById("arch-filter").value.toLowerCase();
+  const yFilter = document.getElementById("arch-year").value;
   const s = document.getElementById("arch-sort").value;
-  let list = archive.filter(a => a.artist.toLowerCase().includes(q) || a.title.toLowerCase().includes(q));
+  let list = archive.filter(a => {
+    const matchText = a.artist.toLowerCase().includes(q) || a.title.toLowerCase().includes(q);
+    const matchYear = !yFilter || (a.year || "").trim() === yFilter;
+    return matchText && matchYear;
+  });
   if (s === "score") list.sort((a, b) => b.finalScore - a.finalScore);
   else if (s === "artist") list.sort((a, b) => a.artist.localeCompare(b.artist));
   const box = document.getElementById("archive-list");
-  box.innerHTML = list.length ? "" : "<p style='color:var(--muted)'>Nessun album salvato.</p>";
+  box.innerHTML = list.length ? "" : "<p style='color:var(--muted)'>Nessun album trovato.</p>";
   list.forEach((a, i) => {
     const div = document.createElement("div");
     div.className = "archive-item";
@@ -469,8 +422,8 @@ function loadFromArchive(id) {
   document.getElementById("ed-artist").value = it.artist;
   document.getElementById("ed-title").value = it.title;
   document.getElementById("ed-year").value = it.year || "";
-  currentCover = it.cover || "";
-  if (currentCover) document.getElementById("album-cover").src = currentCover;
+  document.getElementById("ed-cover-url").value = it.cover || "";
+  setCoverUrl(it.cover || "");
   tracks = JSON.parse(JSON.stringify(it.tracks));
   renderTracks();
   document.querySelector(".tab-btn").click();
@@ -480,19 +433,23 @@ function deleteFromArchive(id) {
   archive = archive.filter(a => a.id !== id);
   localStorage.setItem("ar_archive", JSON.stringify(archive));
   updateArchCount();
+  populateYearFilter();
   renderArchive();
 }
 
 function exportCSV() {
-  let csv = "Artista;Album;Anno;Voto Finale;Tracce Valide\n";
-  archive.forEach(a => {
+  const yFilter = document.getElementById("arch-year").value;
+  let list = archive.filter(a => !yFilter || (a.year || "").trim() === yFilter);
+  list.sort((a, b) => b.finalScore - a.finalScore);
+  let csv = "Posizione;Artista;Album;Anno;Voto Finale;Tracce Valide\n";
+  list.forEach((a, i) => {
     const v = a.tracks.filter(t => t.inf > 0).length;
-    csv += `"${a.artist}";"${a.title}";"${a.year}";"${a.finalScore.toFixed(3).replace('.', ',')}";"${v}"\n`;
+    csv += `"${i + 1}";"${a.artist}";"${a.title}";"${a.year}";"${a.finalScore.toFixed(3).replace('.', ',')}";"${v}"\n`;
   });
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "archivio_dischi.csv";
+  link.download = yFilter ? `classifica_dischi_${yFilter}.csv` : "classifica_dischi_completa.csv";
   link.click();
 }
 
