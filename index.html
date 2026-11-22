@@ -499,14 +499,17 @@ function exportCSV() {
 }
 
 function copyForGithub() {
-  const jsonStr = JSON.stringify(archive, null, 2);
+  saveDraft();
+  const draft = JSON.parse(localStorage.getItem("ar_draft") || "null");
+  const payload = { archive: archive, draft: draft };
+  const jsonStr = JSON.stringify(payload, null, 2);
   const ta = document.createElement("textarea");
   ta.value = jsonStr;
   document.body.appendChild(ta);
   ta.select();
   document.execCommand("copy");
   document.body.removeChild(ta);
-  alert("Archivio copiato negli appunti! Ora si aprirà GitHub: apri archivio.json -> matita (Edit) -> Cmd+A -> Cmd+V -> Commit changes.");
+  alert("Archivio e Bozza copiati! Ora si aprirà GitHub: apri archivio.json -> matita (Edit) -> Cmd+A -> Cmd+V -> Commit changes.");
   window.location.href = "https://github.com";
 }
 
@@ -514,13 +517,18 @@ async function pullFromGithub() {
   try {
     const pub = await fetch(`archivio.json?v=${Date.now()}`);
     if (!pub.ok) return;
-    const remoteList = await pub.json();
-    if (Array.isArray(remoteList) && remoteList.length > 0) {
+    const remote = await pub.json();
+    const remoteList = Array.isArray(remote) ? remote : (remote && Array.isArray(remote.archive) ? remote.archive : null);
+    if (remoteList && remoteList.length > 0) {
       archive = remoteList;
       localStorage.setItem("ar_archive", JSON.stringify(archive));
       updateArchCount();
       populateYearFilter();
       renderArchive();
+    }
+    if (remote && !Array.isArray(remote) && remote.draft) {
+      localStorage.setItem("ar_draft", JSON.stringify(remote.draft));
+      loadDraft();
     }
   } catch (e) {}
 }
