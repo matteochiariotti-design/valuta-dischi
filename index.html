@@ -475,42 +475,49 @@ async function pullFromGithub() {
   if (document.getElementById("gh-token")) document.getElementById("gh-token").value = tok;
   setGhStatus("Sincronizzazione in corso...", false);
   try {
-    let remoteList = null;
     if (tok) {
-      try {
-        const r = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}`, {
-          cache: "no-store",
-          headers: { "Authorization": `token ${tok}` }
-        });
-        if (r.status === 404) {
+      const r = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}`, {
+        cache: "no-store",
+        headers: { "Authorization": `Bearer ${tok}` }
+      });
+      if (!r.ok) {
+        const errBody = await r.json().catch(() => ({}));
+        setGhStatus(`Errore GitHub (${r.status}): ${errBody.message || "controlla il token"}`, true);
+        return;
+      }
+      const data = await r.json();
+      const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+      const remoteList = JSON.parse(decoded);
+      if (Array.isArray(remoteList)) {
+        if (remoteList.length === 0 && archive.length > 0) {
           await pushToGithub();
           return;
         }
-        if (r.ok) {
-          const data = await r.json();
-          const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-          remoteList = JSON.parse(decoded);
-        }
-      } catch (apiErr) {
-        // Fallback pubblico dallo stesso dominio github.io
+        archive = remoteList;
+        localStorage.setItem("ar_archive", JSON.stringify(archive));
+        updateArchCount();
+        populateYearFilter();
+        renderArchive();
+        setGhStatus("✓ Sincronizzato con GitHub", false);
+        return;
       }
     }
-    if (!remoteList) {
-      const pub = await fetch(`archivio.json?v=${Date.now()}`, { cache: "no-store" });
-      if (pub.ok) remoteList = await pub.json();
+    const pub = await fetch(`archivio.json?v=${Date.now()}`, { cache: "no-store" });
+    if (pub.ok) {
+      const remoteList = await pub.json();
+      if (Array.isArray(remoteList)) {
+        archive = remoteList;
+        localStorage.setItem("ar_archive", JSON.stringify(archive));
+        updateArchCount();
+        populateYearFilter();
+        renderArchive();
+        setGhStatus("✓ Caricato da archivio pubblico", false);
+        return;
+      }
     }
-    if (Array.isArray(remoteList)) {
-      archive = remoteList;
-      localStorage.setItem("ar_archive", JSON.stringify(archive));
-      updateArchCount();
-      populateYearFilter();
-      renderArchive();
-      setGhStatus("✓ Sincronizzato con GitHub", false);
-    } else {
-      setGhStatus(tok ? "Errore rete: controlla VPN/Private Relay" : "Inserisci il token per salvare", true);
-    }
+    setGhStatus("Inserisci il token per sincronizzare", true);
   } catch (e) {
-    setGhStatus("Errore sync: " + e.message, true);
+    setGhStatus("Errore rete: " + e.message, true);
   }
 }
 
