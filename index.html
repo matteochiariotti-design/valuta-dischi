@@ -116,6 +116,7 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 <select id="arch-year" onchange="renderArchive()"><option value="">Tutti gli anni</option></select>
 <select id="arch-sort" onchange="renderArchive()"><option value="score">Classifica (Alto → Basso)</option><option value="date">Data inserimento</option><option value="artist">Artista (A → Z)</option></select>
 <button class="btn btn-sec" onclick="exportCSV()">📥 CSV</button>
+<button class="btn" onclick="copyForGithub()">☁️ Pubblica su GitHub</button>
 </div>
 </div><div id="archive-list"></div></div></div>
 
@@ -470,86 +471,29 @@ function saveGhToken() {
   if (tok) pullFromGithub();
 }
 
-async function pullFromGithub() {
-  const tok = localStorage.getItem("ar_gh_token") || "";
-  if (document.getElementById("gh-token")) document.getElementById("gh-token").value = tok;
-  setGhStatus("Sincronizzazione in corso...", false);
-  try {
-    if (tok) {
-      const r = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}?t=${Date.now()}`, {
-        headers: { "Authorization": `Bearer ${tok}` }
-      });
-      if (!r.ok) {
-        const errBody = await r.json().catch(() => ({}));
-        setGhStatus(`Errore GitHub (${r.status}): ${errBody.message || "controlla il token"}`, true);
-        return;
-      }
-      const data = await r.json();
-      const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-      const remoteList = JSON.parse(decoded);
-      if (Array.isArray(remoteList)) {
-        if (remoteList.length === 0 && archive.length > 0) {
-          await pushToGithub();
-          return;
-        }
-        archive = remoteList;
-        localStorage.setItem("ar_archive", JSON.stringify(archive));
-        updateArchCount();
-        populateYearFilter();
-        renderArchive();
-        setGhStatus("✓ Sincronizzato con GitHub", false);
-        return;
-      }
-    }
-    const pub = await fetch(`archivio.json?v=${Date.now()}`);
-    if (pub.ok) {
-      const remoteList = await pub.json();
-      if (Array.isArray(remoteList)) {
-        archive = remoteList;
-        localStorage.setItem("ar_archive", JSON.stringify(archive));
-        updateArchCount();
-        populateYearFilter();
-        renderArchive();
-        setGhStatus("✓ Caricato da archivio pubblico", false);
-        return;
-      }
-    }
-    setGhStatus("Inserisci il token per sincronizzare", true);
-  } catch (e) {
-    setGhStatus("Errore rete: " + e.message, true);
-  }
+function copyForGithub() {
+  const jsonStr = JSON.stringify(archive, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    window.open("https://github.com", "_blank");
+    alert("Archivio copiato negli appunti! Nella pagina di GitHub appena aperta fai Cmd+A, Cmd+V e clicca Commit changes.");
+  }).catch(() => {
+    prompt("Copia tutto questo testo (Cmd+C) e incollalo in archivio.json su GitHub:", jsonStr);
+  });
 }
 
-async function pushToGithub() {
-  const tok = localStorage.getItem("ar_gh_token") || "";
-  if (!tok) return;
-  setGhStatus("Salvataggio su GitHub...", false);
+async function pullFromGithub() {
   try {
-    let sha = null;
-    const check = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}?t=${Date.now()}`, {
-      headers: { "Authorization": `Bearer ${tok}` }
-    });
-    if (check.ok) {
-      const existing = await check.json();
-      sha = existing.sha;
+    const pub = await fetch(`archivio.json?v=${Date.now()}`);
+    if (!pub.ok) return;
+    const remoteList = await pub.json();
+    if (Array.isArray(remoteList) && remoteList.length > 0) {
+      archive = remoteList;
+      localStorage.setItem("ar_archive", JSON.stringify(archive));
+      updateArchCount();
+      populateYearFilter();
+      renderArchive();
     }
-    const jsonStr = JSON.stringify(archive, null, 2);
-    const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-    const body = { message: "Aggiorna archivio dischi", content: b64 };
-    if (sha) body.sha = sha;
-    const res = await fetch(`https://github.com{GH_REPO}/contents/${GH_FILE}`, {
-      method: "PUT",
-      headers: { "Authorization": `Bearer ${tok}` },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw new Error(`${res.status} - ${errBody.message || "Salvataggio fallito"}`);
-    }
-    setGhStatus("✓ Salvato su GitHub", false);
-  } catch (e) {
-    setGhStatus("Errore salvataggio: " + e.message, true);
-  }
+  } catch (e) {}
 }
 
 function saveToArchive() {
