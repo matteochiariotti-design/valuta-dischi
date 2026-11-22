@@ -412,7 +412,7 @@ function renderArchive() {
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0">
         <b style="color:var(--muted);font-size:1.05rem;min-width:26px">#${i + 1}</b>
-        <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:150px;height:150px;border-radius:10px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
+        <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
         <div>
           <div style="font-size:1.05rem;margin-bottom:6px"><b>${a.artist} - ${a.title}</b> ${a.year ? `<span style="color:var(--muted)">(${a.year})</span>` : ''}</div>
           <span style="display:inline-block;font-size:1.25rem;font-weight:800;color:var(--accent2);background:#14261c;padding:3px 10px;border-radius:7px;border:1px solid #224431">${a.finalScore.toFixed(3)}</span>
