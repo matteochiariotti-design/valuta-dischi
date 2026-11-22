@@ -60,8 +60,8 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 <div class="grid-main"><div class="card"><div class="album-header">
 <img id="album-cover" class="cover" src="data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23202430'/%3E%3Ctext x='50%25' y='54%25' font-size='28' text-anchor='middle' fill='%23949cb3'%3E💿%3C/text%3E%3C/svg%3E">
 <div style="flex:1;display:flex;flex-direction:column;gap:6px">
-<input id="ed-artist" placeholder="Nome Artista" style="font-weight:700">
-<div style="display:flex;gap:8px"><input id="ed-title" placeholder="Titolo Album" style="flex:1"><input id="ed-year" placeholder="Anno (es. 2026)" style="width:110px"></div>
+<input id="ed-artist" placeholder="Nome Artista" style="font-weight:700" oninput="saveDraft()">
+<div style="display:flex;gap:8px"><input id="ed-title" placeholder="Titolo Album" style="flex:1" oninput="saveDraft()"><input id="ed-year" placeholder="Anno (es. 2026)" style="width:110px" oninput="saveDraft()"></div>
 <input id="ed-cover-url" placeholder="Incolla URL Copertina (tasto destro su immagine -> Copia indirizzo immagine)" oninput="setCoverUrl(this.value)" style="font-size:.82rem">
 </div></div>
 
@@ -140,10 +140,43 @@ let currentArchiveId = null;
 let cfg = JSON.parse(localStorage.getItem("ar_cfg") || '{"b1":3,"b2":2,"b3":1,"b4":0.5,"m1":3,"m2":2,"m3":1}');
 let archive = JSON.parse(localStorage.getItem("ar_archive") || "[]");
 
+function saveDraft() {
+  const draft = {
+    artist: document.getElementById("ed-artist").value,
+    title: document.getElementById("ed-title").value,
+    year: document.getElementById("ed-year").value,
+    cover: currentCover,
+    currentArchiveId: currentArchiveId,
+    tracks: tracks
+  };
+  localStorage.setItem("ar_draft", JSON.stringify(draft));
+}
+
+function loadDraft() {
+  const raw = localStorage.getItem("ar_draft");
+  if (!raw) return false;
+  try {
+    const d = JSON.parse(raw);
+    if (!d || !Array.isArray(d.tracks) || !d.tracks.length) return false;
+    document.getElementById("ed-artist").value = d.artist || "";
+    document.getElementById("ed-title").value = d.title || "";
+    document.getElementById("ed-year").value = d.year || "";
+    document.getElementById("ed-cover-url").value = d.cover || "";
+    setCoverUrl(d.cover || "");
+    currentArchiveId = d.currentArchiveId || null;
+    document.getElementById("btn-delete-current").style.display = currentArchiveId ? "inline-block" : "none";
+    tracks = d.tracks;
+    renderTracks();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function init() {
   Object.keys(cfg).forEach(k => document.getElementById("cfg-" + k).value = cfg[k]);
   updateLabels();
-  resetAlbum();
+  if (!loadDraft()) resetAlbum();
   updateArchCount();
 }
 
@@ -330,6 +363,7 @@ function recalc() {
   document.getElementById("sup-pond").textContent = sup.pond.toFixed(3);
   for (let i = 0; i < 4; i++) document.getElementById(`det-b${i + 1}`).textContent = `${inf.c.at(i)} | ${sup.c.at(i)}`;
   for (let i = 0; i < 3; i++) document.getElementById(`det-m${i + 1}`).textContent = `${inf.m.at(i)} | ${sup.m.at(i)}`;
+  saveDraft();
 }
 function togglePasteArea() {
   const box = document.getElementById("search-results");
