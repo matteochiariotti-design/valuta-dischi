@@ -1,1 +1,101 @@
-[]
+[
+  {
+    "id": "dinosaur jr::there near",
+    "artist": "Dinosaur jr",
+    "title": "There Near",
+    "year": "2026",
+    "cover": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGcioR0germs5lawbShYk5pYy_BCsglYncKbQxiGLZ8A&s=10",
+    "finalScore": 7.152,
+    "tracks": [
+      {
+        "title": "Several Got Away",
+        "inf": 7.5,
+        "sup": 8,
+        "rymRaw": "4,01",
+        "rym": 10,
+        "note": ""
+      },
+      {
+        "title": "No Friends",
+        "inf": 7.5,
+        "sup": 7.5,
+        "rymRaw": "3,98",
+        "rym": 10,
+        "note": ""
+      },
+      {
+        "title": "Everything at Once",
+        "inf": 7,
+        "sup": 7.5,
+        "rymRaw": "3,80",
+        "rym": 7,
+        "note": ""
+      },
+      {
+        "title": "Take Me With You",
+        "inf": 7,
+        "sup": 7.5,
+        "rymRaw": "3,79",
+        "rym": 7,
+        "note": ""
+      },
+      {
+        "title": "Blowin' Up",
+        "inf": 6.5,
+        "sup": 6.5,
+        "rymRaw": "3,47",
+        "rym": 2,
+        "note": ""
+      },
+      {
+        "title": "Gone Off",
+        "inf": 6.5,
+        "sup": 6.5,
+        "rymRaw": "3,77",
+        "rym": 7,
+        "note": ""
+      },
+      {
+        "title": "Clam Along",
+        "inf": 6,
+        "sup": 6.5,
+        "rymRaw": "3,68",
+        "rym": 5,
+        "note": ""
+      },
+      {
+        "title": "Walk Me Back",
+        "inf": 6,
+        "sup": 6.5,
+        "rymRaw": "3,53",
+        "rym": 3,
+        "note": ""
+      },
+      {
+        "title": "Read the Room",
+        "inf": 7,
+        "sup": 7,
+        "rymRaw": "3,70",
+        "rym": 6,
+        "note": ""
+      },
+      {
+        "title": "Put It Down",
+        "inf": 7.5,
+        "sup": 7.5,
+        "rymRaw": "3,60",
+        "rym": 4,
+        "note": ""
+      },
+      {
+        "title": "No One's Ready",
+        "inf": 6,
+        "sup": 6,
+        "rymRaw": "3,39",
+        "rym": 1,
+        "note": ""
+      }
+    ],
+    "date": "2026-11-21T23:20:28.395Z"
+  }
+]
