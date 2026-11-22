@@ -392,6 +392,8 @@ function populateYearFilter() {
   sel.innerHTML = `<option value="">Tutti gli anni</option>` + years.map(y => `<option value="${y}" ${y === current ? 'selected' : ''}>Anno ${y}</option>`).join("");
 }
 
+let currentArchiveId = null;
+
 function renderArchive() {
   const q = document.getElementById("arch-filter").value.toLowerCase();
   const yFilter = document.getElementById("arch-year").value;
@@ -408,19 +410,17 @@ function renderArchive() {
   list.forEach((a, i) => {
     const div = document.createElement("div");
     div.className = "archive-item";
+    div.style.cursor = "pointer";
+    div.onclick = () => loadFromArchive(a.id);
     const coverSrc = a.cover || DEFAULT_COVER;
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0">
-        <b style="color:var(--muted);font-size:1.05rem;min-width:26px">#${i + 1}</b>
+        <b style="color:var(--muted);font-size:1.05rem;min-width:24px">#${i + 1}</b>
         <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:80px;height:80px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
-        <div>
-          <div style="font-size:1.05rem;margin-bottom:6px"><b>${a.artist} - ${a.title}</b> ${a.year ? `<span style="color:var(--muted)">(${a.year})</span>` : ''}</div>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:1.02rem;margin-bottom:6px;line-height:1.25"><b>${a.artist} - ${a.title}</b> ${a.year ? `<span style="color:var(--muted)">(${a.year})</span>` : ''}</div>
           <span style="display:inline-block;font-size:1.25rem;font-weight:800;color:var(--accent2);background:#14261c;padding:3px 10px;border-radius:7px;border:1px solid #224431">${a.finalScore.toFixed(3)}</span>
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:18px;flex-shrink:0">
-        <button class="btn btn-sec" style="padding:6px 11px" onclick="loadFromArchive('${a.id}')">Apri</button>
-        <button class="btn btn-del" onclick="deleteFromArchive('${a.id}')">✕</button>
       </div>`;
     box.appendChild(div);
   });
@@ -429,6 +429,8 @@ function renderArchive() {
 function loadFromArchive(id) {
   const it = archive.find(a => a.id === id);
   if (!it) return;
+  currentArchiveId = id;
+  document.getElementById("btn-delete-current").style.display = "inline-block";
   document.getElementById("ed-artist").value = it.artist;
   document.getElementById("ed-title").value = it.title;
   document.getElementById("ed-year").value = it.year || "";
@@ -437,6 +439,19 @@ function loadFromArchive(id) {
   tracks = JSON.parse(JSON.stringify(it.tracks));
   renderTracks();
   document.querySelector(".tab-btn").click();
+}
+
+function deleteCurrentAlbum() {
+  if (!currentArchiveId) return;
+  if (!confirm("Eliminare definitivamente questo album dall'archivio?")) return;
+  archive = archive.filter(a => a.id !== currentArchiveId);
+  localStorage.setItem("ar_archive", JSON.stringify(archive));
+  currentArchiveId = null;
+  document.getElementById("btn-delete-current").style.display = "none";
+  updateArchCount();
+  populateYearFilter();
+  resetAlbum();
+  document.querySelectorAll(".tab-btn").at(1).click();
 }
 
 function exportCSV() {
@@ -455,27 +470,11 @@ function exportCSV() {
   link.click();
 }
 
-const GH_REPO = "matteochiariotti-design/valuta-dischi";
-const GH_FILE = "archivio.json";
-
-function setGhStatus(msg, isErr) {
-  const el = document.getElementById("gh-status");
-  if (!el) return;
-  el.textContent = msg;
-  el.style.color = isErr ? "var(--danger)" : "var(--accent2)";
-}
-
-function saveGhToken() {
-  const tok = document.getElementById("gh-token").value.trim();
-  localStorage.setItem("ar_gh_token", tok);
-  if (tok) pullFromGithub();
-}
-
 function copyForGithub() {
   const jsonStr = JSON.stringify(archive, null, 2);
   navigator.clipboard.writeText(jsonStr).then(() => {
     window.open("https://github.com", "_blank");
-    alert("Archivio copiato negli appunti! Nella pagina di GitHub appena aperta fai Cmd+A, Cmd+V e clicca Commit changes.");
+    alert("Archivio copiato negli appunti! Nella pagina di GitHub appena aperta apri archivio.json, fai Cmd+A, Cmd+V e clicca Commit changes.");
   }).catch(() => {
     prompt("Copia tutto questo testo (Cmd+C) e incollalo in archivio.json su GitHub:", jsonStr);
   });
@@ -506,18 +505,10 @@ function saveToArchive() {
   const idx = archive.findIndex(a => a.id === id);
   if (idx >= 0) archive.splice(idx, 1, entry); else archive.unshift(entry);
   localStorage.setItem("ar_archive", JSON.stringify(archive));
+  currentArchiveId = id;
+  document.getElementById("btn-delete-current").style.display = "inline-block";
   updateArchCount();
-  pushToGithub();
   alert(`Salvato: ${artist} - ${title} (${finalScore.toFixed(3)})`);
-}
-
-function deleteFromArchive(id) {
-  archive = archive.filter(a => a.id !== id);
-  localStorage.setItem("ar_archive", JSON.stringify(archive));
-  updateArchCount();
-  populateYearFilter();
-  renderArchive();
-  pushToGithub();
 }
 
 init();
