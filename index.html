@@ -46,6 +46,9 @@ td{padding:5px;border-bottom:1px solid #222634;vertical-align:middle}
 .badge-ok{color:var(--accent2)!important}.badge-no{color:var(--warn)!important}
 .search-results{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
 .archive-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
+.listen-btn{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:5px 7px;border-radius:6px;cursor:pointer;font-size:.82rem}
+.listen-btn.on{background:#b45309;border-color:#f59e0b;color:#fff}
 </style>
 </head>
 <body>
@@ -295,12 +298,18 @@ function updateRymBarsOnly() {
   });
 }
 
+function toggleListen(i) {
+  tracks[i].toListen = !tracks[i].toListen;
+  renderTracks();
+}
+
 function renderTracks() {
   computeAutoRym();
   const tb = document.getElementById("tracks-body");
   tb.innerHTML = "";
   tracks.forEach((t, i) => {
     const tr = document.createElement("tr");
+    if (t.toListen) tr.className = "to-listen";
     let b = `<div class="rym-bars">`;
     for (let k = 1; k <= 10; k++) {
       b += `<div class="rym-dot ${t.rym >= k ? 'on' : ''}"></div>`;
@@ -314,7 +323,7 @@ function renderTracks() {
       <td style="text-align:center"><input class="rym-input" placeholder="3,79" value="${t.rymRaw || ''}" oninput="onRymInput(${i},this.value)"></td>
       <td id="rym-cell-${i}">${b}</td>
       <td><input class="note-input" value="${t.note}" oninput="tracks[${i}].note=this.value;saveDraft()"></td>
-      <td><button class="btn btn-del" onclick="removeTrack(${i})">✕</button></td>`;
+      <td style="white-space:nowrap"><button class="listen-btn ${t.toListen ? 'on' : ''}" title="Segna da riascoltare" onclick="toggleListen(${i})">🎧</button> <button class="btn btn-del" onclick="removeTrack(${i})">✕</button></td>`;
     tb.appendChild(tr);
   });
   recalc();
@@ -347,7 +356,8 @@ function recalc() {
   const ex = tracks.filter(t => t.inf === 0 && t.sup === 0).length;
   const fin = (inf.N > 0 && sup.N > 0) ? ((inf.pond + sup.pond) / 2) : 0;
   document.getElementById("res-final").textContent = fin.toFixed(3);
-  document.getElementById("res-meta").textContent = `${inf.N} tracce valide (${ex} interludi esclusi)`;
+  const toL = tracks.filter(t => t.toListen).length;
+  document.getElementById("res-meta").textContent = `${inf.N} tracce valide (${ex} int.)${toL > 0 ? ` • 🎧 ${toL} da ascoltare` : ''}`;
   document.getElementById("inf-sum").textContent = inf.sum.toFixed(1);
   document.getElementById("inf-mat").textContent = inf.mat.toFixed(3);
   const e1 = document.getElementById("inf-ge7");
