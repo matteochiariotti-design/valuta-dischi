@@ -209,6 +209,7 @@ function setCoverUrl(url) {
   const img = document.getElementById("album-cover");
   img.onerror = () => { img.src = DEFAULT_COVER; };
   img.src = currentCover || DEFAULT_COVER;
+  saveDraft();
 }
 
 function resetAlbum() {
@@ -255,6 +256,7 @@ function onRymInput(i, v) {
   tracks[i].rymRaw = v;
   computeAutoRym();
   updateRymBarsOnly();
+  saveDraft();
 }
 
 function computeAutoRym() {
@@ -305,12 +307,12 @@ function renderTracks() {
     b += `<span class="rym-score-lbl">${t.rym > 0 ? t.rym : '-'}</span></div>`;
     tr.innerHTML = `
       <td style="color:var(--muted)">${i + 1}</td>
-      <td><input class="title-input" value="${t.title.replace(/"/g, '&quot;')}" oninput="tracks[${i}].title=this.value"></td>
+      <td><input class="title-input" value="${t.title.replace(/"/g, '&quot;')}" oninput="tracks[${i}].title=this.value;saveDraft()"></td>
       <td style="text-align:center">${buildVoteSelect(i, 'inf', t.inf)}</td>
       <td style="text-align:center">${buildVoteSelect(i, 'sup', t.sup)}</td>
       <td style="text-align:center"><input class="rym-input" placeholder="3,79" value="${t.rymRaw || ''}" oninput="onRymInput(${i},this.value)"></td>
       <td id="rym-cell-${i}">${b}</td>
-      <td><input class="note-input" value="${t.note}" oninput="tracks[${i}].note=this.value"></td>
+      <td><input class="note-input" value="${t.note}" oninput="tracks[${i}].note=this.value;saveDraft()"></td>
       <td><button class="btn btn-del" onclick="removeTrack(${i})">✕</button></td>`;
     tb.appendChild(tr);
   });
