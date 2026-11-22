@@ -225,6 +225,7 @@ function resetAlbum() {
     title: `Traccia ${i + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: ""
   }));
   renderTracks();
+  saveDraft();
 }
 
 function addTrack() {
@@ -542,6 +543,8 @@ function saveToArchive() {
 
 init();
 pullFromGithub();
+window.addEventListener("beforeunload", saveDraft);
+window.addEventListener("pagehide", saveDraft);
 </script>
 </body>
 </html>
