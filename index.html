@@ -82,7 +82,8 @@ tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
 </div>
 
 <div>
-<div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div></div>
+<div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px;display:flex;gap:8px<div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn" onclick="copyForGithub(this)">☁️ Pubblica su GitHub</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div>
+justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div></div>
 <div class="stat-grid">
 <div class="stat-box"><h4>Media Inferiore</h4>
 <div class="stat-line"><span>Somma voti:</span><span id="inf-sum">0</span></div>
@@ -508,19 +509,66 @@ function exportCSV() {
   link.click();
 }
 
-function copyForGithub() {
+async function copyForGithub(btnEl) {
   saveDraft();
+  let tok = localStorage.getItem("ar_gh_token") || "";
+  if (!tok) {
+    tok = prompt("Incolla il tuo GitHub Token (verrà memorizzato su questo dispositivo per i prossimi invii diretti):");
+    if (!tok || !tok.trim()) return;
+    tok = tok.trim();
+    localStorage.setItem("ar_gh_token", tok);
+  }
+  const btn = btnEl || (typeof event !== "undefined" && event && event.target ? event.target : null);
+  const origText = btn ? btn.textContent : "☁️ Pubblica su GitHub";
+  if (btn) btn.textContent = "⏳ Salvataggio...";
+
   const draft = JSON.parse(localStorage.getItem("ar_draft") || "null");
   const payload = { archive: archive, draft: draft };
   const jsonStr = JSON.stringify(payload, null, 2);
-  const ta = document.createElement("textarea");
-  ta.value = jsonStr;
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
-  alert("Archivio e Bozza copiati! Ora si aprirà GitHub: apri archivio.json -> matita (Edit) -> Cmd+A -> Cmd+V -> Commit changes.");
-  window.location.href = "https://github.com";
+  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+  const apiUrl = "https://github.com";
+
+  try {
+    const getRes = await fetch(apiUrl, {
+      headers: { "Authorization": `Bearer ${tok}`, "Accept": "application/vnd.github+json" }
+    });
+    let sha = undefined;
+    if (getRes.ok) {
+      const fileData = await getRes.json();
+      sha = fileData.sha;
+    } else if (getRes.status === 401 || getRes.status === 403) {
+      localStorage.removeItem("ar_gh_token");
+      if (btn) btn.textContent = origText;
+      alert("Token non valido o senza permessi: clicca di nuovo per inserirne uno valido.");
+      return;
+    }
+
+    const putRes = await fetch(apiUrl, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${tok}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: "Aggiornamento archivio e bozza da app",
+        content: b64,
+        sha: sha
+      })
+    });
+
+    if (putRes.ok) {
+      if (btn) btn.textContent = "✅ Pubblicato!";
+      setTimeout(() => { if (btn) btn.textContent = origText; }, 2500);
+    } else {
+      const err = await putRes.json();
+      if (btn) btn.textContent = origText;
+      alert("Errore GitHub: " + (err.message || putRes.status));
+    }
+  } catch (e) {
+    if (btn) btn.textContent = origText;
+    alert("Errore di connessione: " + e.message);
+  }
 }
 
 async function pullFromGithub() {
