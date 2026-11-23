@@ -2098,31 +2098,35 @@
         "sup": 7.5,
         "rymRaw": "3,85",
         "rym": 8,
-        "note": "A?"
+        "note": "",
+        "toListen": false
       },
       {
         "title": "Designed to Lose",
         "inf": 6.5,
-        "sup": 6.5,
+        "sup": 7,
         "rymRaw": "3,78",
         "rym": 7,
-        "note": ""
+        "note": "",
+        "toListen": true
       },
       {
         "title": "Attempt a Crash Landing - Theme",
-        "inf": 6.5,
-        "sup": 6.5,
+        "inf": 7,
+        "sup": 7.5,
         "rymRaw": "3,87",
         "rym": 9,
-        "note": ""
+        "note": "+?",
+        "toListen": true
       },
       {
         "title": "Waiting for the Phone Call",
-        "inf": 6.5,
-        "sup": 6.5,
+        "inf": 8,
+        "sup": 8,
         "rymRaw": "3,94",
         "rym": 10,
-        "note": ""
+        "note": "",
+        "toListen": false
       },
       {
         "title": "The Ceiling Underground",
@@ -2130,15 +2134,17 @@
         "sup": 6.5,
         "rymRaw": "3,65",
         "rym": 5,
-        "note": ""
+        "note": "",
+        "toListen": false
       },
       {
         "title": "Dead Flowers",
-        "inf": 6.5,
-        "sup": 6.5,
+        "inf": 7.5,
+        "sup": 7.5,
         "rymRaw": "3,85",
         "rym": 8,
-        "note": ""
+        "note": "",
+        "toListen": false
       },
       {
         "title": "Inhospitable / Hospital",
@@ -2146,7 +2152,8 @@
         "sup": 6.5,
         "rymRaw": "3,77",
         "rym": 7,
-        "note": ""
+        "note": "-",
+        "toListen": false
       },
       {
         "title": "Chest Wound to the Chest",
@@ -2154,23 +2161,26 @@
         "sup": 6.5,
         "rymRaw": "3,70",
         "rym": 6,
-        "note": ""
+        "note": "",
+        "toListen": false
       },
       {
         "title": "Back to Fourteen",
-        "inf": 6.5,
-        "sup": 6.5,
+        "inf": 6,
+        "sup": 6,
         "rymRaw": "3,5",
         "rym": 2,
-        "note": ""
+        "note": "",
+        "toListen": false
       },
       {
         "title": "TV People Still Throwing TVs at People",
-        "inf": 6.5,
-        "sup": 6.5,
+        "inf": 7,
+        "sup": 7.5,
         "rymRaw": "3,83",
         "rym": 8,
-        "note": ""
+        "note": "+?",
+        "toListen": true
       }
     ]
   }
