@@ -511,11 +511,12 @@ function exportCSV() {
 
 async function copyForGithub(btnEl) {
   saveDraft();
-  let tok = localStorage.getItem("ar_gh_token") || "";
+  let tok = (localStorage.getItem("ar_gh_token") || "").replace(/\s+/g, "");
   if (!tok) {
-    tok = prompt("Incolla il tuo GitHub Token (verrà memorizzato su questo dispositivo per i prossimi invii diretti):");
-    if (!tok || !tok.trim()) return;
-    tok = tok.trim();
+    const raw = prompt("Incolla il tuo GitHub Token (verrà memorizzato su questo dispositivo):");
+    if (!raw) return;
+    tok = raw.replace(/\s+/g, "");
+    if (!tok) return;
     localStorage.setItem("ar_gh_token", tok);
   }
   const btn = btnEl || (typeof event !== "undefined" && event && event.target ? event.target : null);
@@ -529,8 +530,8 @@ async function copyForGithub(btnEl) {
   const apiUrl = "https://github.com";
 
   try {
-    const getRes = await fetch(apiUrl, {
-      headers: { "Authorization": `Bearer ${tok}`, "Accept": "application/vnd.github+json" }
+    const getRes = await fetch(apiUrl + "?t=" + Date.now(), {
+      headers: { "Authorization": "token " + tok }
     });
     let sha = undefined;
     if (getRes.ok) {
@@ -546,8 +547,7 @@ async function copyForGithub(btnEl) {
     const putRes = await fetch(apiUrl, {
       method: "PUT",
       headers: {
-        "Authorization": `Bearer ${tok}`,
-        "Accept": "application/vnd.github+json",
+        "Authorization": "token " + tok,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
