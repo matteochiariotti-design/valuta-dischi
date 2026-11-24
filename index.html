@@ -82,8 +82,7 @@ tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
 </div>
 
 <div>
-<div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px;display:flex;gap:8px<div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn" onclick="copyForGithub(this)">☁️ Pubblica su GitHub</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div>
-justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div></div>
+<div class="score-box"><div style="font-size:.82rem;color:var(--muted);text-transform:uppercase">Voto Finale Album</div><div class="score-big" id="res-final">0.000</div><div class="score-sub" id="res-meta">0 tracce valide</div><div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ok" onclick="saveToArchive()">💾 Salva in Archivio</button><button class="btn" onclick="copyForGithub(this)">☁️ Pubblica su GitHub</button><button class="btn btn-del" id="btn-delete-current" style="display:none;padding:8px 12px;font-size:.88rem" onclick="deleteCurrentAlbum()">🗑️ Elimina</button></div></div>
 <div class="stat-grid">
 <div class="stat-box"><h4>Media Inferiore</h4>
 <div class="stat-line"><span>Somma voti:</span><span id="inf-sum">0</span></div>
@@ -509,13 +508,25 @@ function exportCSV() {
   link.click();
 }
 
+function ghRequest(method, url, tok, bodyObj) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader("Authorization", "Bearer " + tok);
+    if (bodyObj) xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onload = () => resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, text: xhr.responseText });
+    xhr.onerror = () => reject(new Error("Richiesta bloccata dal browser (controlla AdBlock o connessione)"));
+    xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
+  });
+}
+
 async function copyForGithub(btnEl) {
   saveDraft();
-  let tok = (localStorage.getItem("ar_gh_token") || "").replace(/\s+/g, "");
-  if (!tok) {
-    const raw = prompt("Incolla il tuo GitHub Token (verrà memorizzato su questo dispositivo):");
+  let tok = (localStorage.getItem("ar_gh_token") || "").replace(/[^a-zA-Z0-9_]/g, "");
+  if (!tok || (!tok.startsWith("github_pat_") && !tok.startsWith("gh"))) {
+    const raw = prompt("Incolla il tuo GitHub Token (inizia con github_pat_ o ghp_):");
     if (!raw) return;
-    tok = raw.replace(/\s+/g, "");
+    tok = raw.replace(/[^a-zA-Z0-9_]/g, "");
     if (!tok) return;
     localStorage.setItem("ar_gh_token", tok);
   }
@@ -530,12 +541,10 @@ async function copyForGithub(btnEl) {
   const apiUrl = "https://github.com";
 
   try {
-    const getRes = await fetch(apiUrl + "?t=" + Date.now(), {
-      headers: { "Authorization": "token " + tok }
-    });
+    const getRes = await ghRequest("GET", apiUrl + "?t=" + Date.now(), tok, null);
     let sha = undefined;
     if (getRes.ok) {
-      const fileData = await getRes.json();
+      const fileData = JSON.parse(getRes.text);
       sha = fileData.sha;
     } else if (getRes.status === 401 || getRes.status === 403) {
       localStorage.removeItem("ar_gh_token");
@@ -544,30 +553,24 @@ async function copyForGithub(btnEl) {
       return;
     }
 
-    const putRes = await fetch(apiUrl, {
-      method: "PUT",
-      headers: {
-        "Authorization": "token " + tok,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: "Aggiornamento archivio e bozza da app",
-        content: b64,
-        sha: sha
-      })
+    const putRes = await ghRequest("PUT", apiUrl, tok, {
+      message: "Aggiornamento archivio e bozza da app",
+      content: b64,
+      sha: sha
     });
 
     if (putRes.ok) {
       if (btn) btn.textContent = "✅ Pubblicato!";
       setTimeout(() => { if (btn) btn.textContent = origText; }, 2500);
     } else {
-      const err = await putRes.json();
+      const err = JSON.parse(putRes.text || "{}");
       if (btn) btn.textContent = origText;
       alert("Errore GitHub: " + (err.message || putRes.status));
     }
   } catch (e) {
+    localStorage.removeItem("ar_gh_token");
     if (btn) btn.textContent = origText;
-    alert("Errore di connessione: " + e.message);
+    alert("Errore: " + e.message);
   }
 }
 
