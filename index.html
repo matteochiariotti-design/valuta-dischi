@@ -507,70 +507,19 @@ function exportCSV() {
   link.click();
 }
 
-function ghRequest(method, url, tok, bodyObj) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.setRequestHeader("Authorization", "Bearer " + tok);
-    if (bodyObj) xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onload = () => resolve({ status: xhr.status, ok: xhr.status >= 200 && xhr.status < 300, text: xhr.responseText });
-    xhr.onerror = () => reject(new Error("Richiesta bloccata dal browser (controlla AdBlock o connessione)"));
-    xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
-  });
-}
-
-async function copyForGithub(btnEl) {
+function copyForGithub() {
   saveDraft();
-  let tok = (localStorage.getItem("ar_gh_token") || "").replace(/[^a-zA-Z0-9_]/g, "");
-  if (!tok || (!tok.startsWith("github_pat_") && !tok.startsWith("gh"))) {
-    const raw = prompt("Incolla il tuo GitHub Token (inizia con github_pat_ o ghp_):");
-    if (!raw) return;
-    tok = raw.replace(/[^a-zA-Z0-9_]/g, "");
-    if (!tok) return;
-    localStorage.setItem("ar_gh_token", tok);
-  }
-  const btn = btnEl || (typeof event !== "undefined" && event && event.target ? event.target : null);
-  const origText = btn ? btn.textContent : "☁️ Pubblica su GitHub";
-  if (btn) btn.textContent = "⏳ Salvataggio...";
-
   const draft = JSON.parse(localStorage.getItem("ar_draft") || "null");
   const payload = { archive: archive, draft: draft };
   const jsonStr = JSON.stringify(payload, null, 2);
-  const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
-  const apiUrl = "https://github.com";
-
-  try {
-    const getRes = await ghRequest("GET", apiUrl + "?t=" + Date.now(), tok, null);
-    let sha = undefined;
-    if (getRes.ok) {
-      const fileData = JSON.parse(getRes.text);
-      sha = fileData.sha;
-    } else if (getRes.status === 401 || getRes.status === 403) {
-      localStorage.removeItem("ar_gh_token");
-      if (btn) btn.textContent = origText;
-      alert("Token non valido o senza permessi: clicca di nuovo per inserirne uno valido.");
-      return;
-    }
-
-    const putRes = await ghRequest("PUT", apiUrl, tok, {
-      message: "Aggiornamento archivio e bozza da app",
-      content: b64,
-      sha: sha
-    });
-
-    if (putRes.ok) {
-      if (btn) btn.textContent = "✅ Pubblicato!";
-      setTimeout(() => { if (btn) btn.textContent = origText; }, 2500);
-    } else {
-      const err = JSON.parse(putRes.text || "{}");
-      if (btn) btn.textContent = origText;
-      alert("Errore GitHub: " + (err.message || putRes.status));
-    }
-  } catch (e) {
-    localStorage.removeItem("ar_gh_token");
-    if (btn) btn.textContent = origText;
-    alert("Errore: " + e.message);
-  }
+  const ta = document.createElement("textarea");
+  ta.value = jsonStr;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand("copy");
+  document.body.removeChild(ta);
+  alert("Archivio e Bozza copiati! Ora si aprirà GitHub: apri archivio.json -> matita (Edit) -> Cmd+A -> Cmd+V -> Commit changes.");
+  window.location.href = "https://github.com";
 }
 
 async function pullFromGithub() {
