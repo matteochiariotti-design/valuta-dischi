@@ -507,19 +507,27 @@ function exportCSV() {
   link.click();
 }
 
-function copyForGithub() {
+async function copyForGithub(btnEl) {
   saveDraft();
+  const btn = btnEl || (typeof event !== "undefined" && event && event.target ? event.target : null);
+  const origText = btn ? btn.textContent : "☁️ Pubblica su GitHub";
+  if (btn) btn.textContent = "⏳ Salvataggio...";
+
   const draft = JSON.parse(localStorage.getItem("ar_draft") || "null");
-  const payload = { archive: archive, draft: draft };
-  const jsonStr = JSON.stringify(payload, null, 2);
-  const ta = document.createElement("textarea");
-  ta.value = jsonStr;
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand("copy");
-  document.body.removeChild(ta);
-  alert("Archivio e Bozza copiati! Ora si aprirà GitHub: apri archivio.json -> matita (Edit) -> Cmd+A -> Cmd+V -> Commit changes.");
-  window.location.href = "https://github.com";
+  const payload = JSON.stringify({ archive: archive, draft: draft });
+
+  try {
+    await fetch("https://script.google.com/macros/s/AKfycbzDphD0gLnhIxshRwasTWKpzrGbrN7YMOMWBoLQzP4UrnFkS4Jpagh9WdWMlfO7ZeaM/exec", {
+      method: "POST",
+      mode: "no-cors",
+      body: payload
+    });
+    if (btn) btn.textContent = "✅ Pubblicato!";
+    setTimeout(() => { if (btn) btn.textContent = origText; }, 2500);
+  } catch (e) {
+    if (btn) btn.textContent = origText;
+    alert("Errore di invio: " + e.message);
+  }
 }
 
 async function pullFromGithub() {
