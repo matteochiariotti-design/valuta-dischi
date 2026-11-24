@@ -118,7 +118,7 @@ tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
 <select id="arch-year" onchange="renderArchive()"><option value="">Tutti gli anni</option></select>
 <select id="arch-sort" onchange="renderArchive()"><option value="score">Classifica (Alto → Basso)</option><option value="date">Data inserimento</option><option value="artist">Artista (A → Z)</option></select>
 <button class="btn btn-sec" onclick="exportCSV()">📥 CSV</button>
-<button class="btn" onclick="copyForGithub()">☁️ Pubblica su GitHub</button>
+<button class="btn" onclick="copyForGithub(this)">☁️ Pubblica su GitHub</button>
 </div>
 </div><div id="archive-list"></div></div></div>
 
@@ -225,14 +225,14 @@ function resetAlbum() {
   currentCover = "";
   document.getElementById("album-cover").src = DEFAULT_COVER;
   tracks = Array.from({length: 10}, (_, i) => ({
-    title: `Traccia ${i + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: ""
+    title: `Traccia ${i + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "", toListen: false
   }));
   renderTracks();
   saveDraft();
 }
 
 function addTrack() {
-  tracks.push({ title: `Traccia ${tracks.length + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "" });
+  tracks.push({ title: `Traccia ${tracks.length + 1}`, inf: 6.5, sup: 6.5, rymRaw: "", rym: 0, note: "", toListen: false });
   renderTracks();
 }
 
@@ -244,6 +244,11 @@ function removeTrack(i) {
 
 function copyInfToSup() {
   tracks.forEach(t => t.sup = t.inf);
+  renderTracks();
+}
+
+function toggleListen(i) {
+  tracks[i].toListen = !tracks[i].toListen;
   renderTracks();
 }
 
@@ -298,11 +303,6 @@ function updateRymBarsOnly() {
   });
 }
 
-function toggleListen(i) {
-  tracks[i].toListen = !tracks[i].toListen;
-  renderTracks();
-}
-
 function renderTracks() {
   computeAutoRym();
   const tb = document.getElementById("tracks-body");
@@ -328,7 +328,6 @@ function renderTracks() {
   });
   recalc();
 }
-
 function calcSide(vals) {
   const valid = vals.filter(v => v > 0);
   const N = valid.length;
@@ -378,6 +377,7 @@ function recalc() {
   for (let i = 0; i < 3; i++) document.getElementById(`det-m${i + 1}`).textContent = `${inf.m.at(i)} | ${sup.m.at(i)}`;
   saveDraft();
 }
+
 function togglePasteArea() {
   const box = document.getElementById("search-results");
   if (document.getElementById("paste-box")) {
@@ -411,7 +411,7 @@ function importPastedTracks() {
     }
     let clean = line.replace(/^\d+[\.\)\-\s]+/, "").replace(/\s+\d{1,2}:\d{2}$/, "").trim();
     if (clean.length > 0) {
-      parsed.push({ title: clean, inf: 6.5, sup: 6.5, rymRaw: rymVal, rym: 0, note: "" });
+      parsed.push({ title: clean, inf: 6.5, sup: 6.5, rymRaw: rymVal, rym: 0, note: "", toListen: false });
     }
   }
   if (!parsed.length) {
@@ -454,7 +454,7 @@ function renderArchive() {
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:0">
         <b style="color:var(--muted);font-size:1.05rem;min-width:24px">#${i + 1}</b>
-        <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:128px;height:128px;border-radius:10px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
+        <img src="${coverSrc}" onerror="this.src=DEFAULT_COVER" style="width:96px;height:96px;border-radius:10px;object-fit:cover;border:1px solid var(--border);flex-shrink:0">
         <div style="min-width:0;flex:1">
           <div style="font-size:1.02rem;margin-bottom:6px;line-height:1.25"><b>${a.artist} - ${a.title}</b> ${a.year ? `<span style="color:var(--muted)">(${a.year})</span>` : ''}</div>
           <span style="display:inline-block;font-size:1.25rem;font-weight:800;color:var(--accent2);background:#14261c;padding:3px 10px;border-radius:7px;border:1px solid #224431">${a.finalScore.toFixed(3)}</span>
@@ -463,7 +463,6 @@ function renderArchive() {
     box.appendChild(div);
   });
 }
-
 function loadFromArchive(id) {
   const it = archive.find(a => a.id === id);
   if (!it) return;
