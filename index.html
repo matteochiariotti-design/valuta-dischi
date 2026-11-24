@@ -532,7 +532,8 @@ async function copyForGithub(btnEl) {
 
 async function pullFromGithub() {
   try {
-    const pub = await fetch(`archivio.json?v=${Date.now()}`);
+    const rawHost = ["raw", "githubusercontent", "com"].join(".");
+    const pub = await fetch(`https://${rawHost}/matteochiariotti-design/valuta-dischi/main/archivio.json?v=${Date.now()}`);
     if (!pub.ok) return;
     const remote = await pub.json();
     const remoteList = Array.isArray(remote) ? remote : (remote && Array.isArray(remote.archive) ? remote.archive : null);
