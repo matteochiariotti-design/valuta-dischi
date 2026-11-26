@@ -583,20 +583,39 @@ function saveToArchive() {
 
 let collection = [];
 
-async function loadCollection() {
-  try {
-    const rawHost = ["raw", "githubusercontent", "com"].join(".");
-    const res = await fetch(`https://${rawHost}/matteochiariotti-design/valuta-dischi/main/collezione.json?v=${Date.now()}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        collection = data;
-        document.getElementById("col-count").textContent = collection.length;
-        renderCollection();
+  async function loadCollection() {
+    try {
+      const ghHost = ["a" + "pi", "github", "com"].join(".");
+      const token = (localStorage.getItem("gh_token") || "").trim();
+      const headers = { "Accept": "application/vnd.github+json" };
+      if (token) headers["Authorization"] = "Bearer " + token;
+      const apiRes = await fetch(`https://${ghHost}/repos/matteochiariotti-design/valuta-dischi/contents/collezione.json?ref=main&t=${Date.now()}`, { headers, cache: "no-store" });
+      if (apiRes.ok) {
+        const meta = await apiRes.json();
+        const bin = atob(meta.content.replace(/\s/g, ""));
+        const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+        const data = JSON.parse(new TextDecoder().decode(bytes));
+        if (Array.isArray(data)) {
+          collection = data;
+          document.getElementById("col-count").textContent = collection.length;
+          renderCollection();
+          return;
+        }
       }
-    }
-  } catch (e) {}
-}
+    } catch (e) {}
+    try {
+      const rawHost = ["raw", "githubusercontent", "com"].join(".");
+      const res = await fetch(`https://${rawHost}/matteochiariotti-design/valuta-dischi/main/collezione.json?v=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          collection = data;
+          document.getElementById("col-count").textContent = collection.length;
+          renderCollection();
+        }
+      }
+    } catch (e) {}
+  }
 
 function renderCollection() {
   const q = (document.getElementById("col-filter").value || "").toLowerCase();
