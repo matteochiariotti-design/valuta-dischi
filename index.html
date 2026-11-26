@@ -56,6 +56,7 @@ tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
 <header><h1>💿 Album Rater Pro</h1><div class="tabs">
 <button class="tab-btn active" onclick="switchTab('editor',this)">Valuta Disco</button>
 <button class="tab-btn" onclick="switchTab('archive',this)">Archivio (<span id="arch-count">0</span>)</button>
+<button class="tab-btn" onclick="switchTab('collection',this)">💿 Collezione (<span id="col-count">0</span>)</button>
 <button class="tab-btn" onclick="switchTab('settings',this)">Formule</button>
 </div></header>
 
@@ -122,6 +123,19 @@ tr.to-listen td{background:#2a2416!important;border-bottom-color:#5c481c}
 </div>
 </div><div id="archive-list"></div></div></div>
 
+<div id="tab-collection" class="panel"><div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+<input id="col-filter" placeholder="Cerca artista o album (Ce l'ho già?)..." oninput="renderCollection()" style="flex:1;min-width:180px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<select id="col-format" onchange="renderCollection()"><option value="">Tutti (Vinili + CD)</option><option value="Vinile">Solo Vinili</option><option value="CD">Solo CD</option></select>
+<select id="col-sort" onchange="renderCollection()"><option value="date">Ultimi aggiunti</option><option value="artist">Artista (A → Z)</option><option value="year">Anno</option></select>
+<button class="btn btn-sec" onclick="loadCollection()">🔄 Aggiorna</button>
+<button class="btn btn-ok" onclick="addManualCollection()">+ Aggiungi</button>
+</div>
+</div>
+<div id="col-stats" style="font-size:.85rem;color:var(--muted);margin-bottom:10px"></div>
+<div id="collection-list"></div>
+</div></div>  
 <div id="tab-settings" class="panel"><div class="card"><h3 style="margin-top:0">Moltiplicatori al Denominatore: Brani / (N × Moltiplicatore)</h3>
 <div class="stat-grid"><div class="stat-box"><h4>Bonus (attivi se brani ≥ 7.0 sono ≥ 50%)</h4>
 <div class="stat-line"><span>7.0–7.4:</span><input type="number" step="0.5" id="cfg-b1" value="3" class="num-input" onchange="saveCfg()"></div>
@@ -566,6 +580,91 @@ function saveToArchive() {
   updateArchCount();
   alert(`Salvato: ${artist} - ${title} (${finalScore.toFixed(3)})`);
 }
+
+let collection = [];
+
+async function loadCollection() {
+  try {
+    const rawHost = ["raw", "githubusercontent", "com"].join(".");
+    const res = await fetch(`https://${rawHost}/matteochiariotti-design/valuta-dischi/main/collezione.json?v=${Date.now()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        collection = data;
+        document.getElementById("col-count").textContent = collection.length;
+        renderCollection();
+      }
+    }
+  } catch (e) {}
+}
+
+function renderCollection() {
+  const q = (document.getElementById("col-filter").value || "").toLowerCase();
+  const fmt = document.getElementById("col-format").value;
+  const srt = document.getElementById("col-sort").value;
+  const vinili = collection.filter(d => d.format === "Vinile").length;
+  const cd = collection.filter(d => d.format === "CD").length;
+  document.getElementById("col-stats").textContent = `Totale: ${collection.length} dischi (${vinili} Vinili • ${cd} CD)`;
+
+  let list = collection.filter(d => {
+    const matchText = (d.artist + " " + d.title + " " + (d.year || "")).toLowerCase().includes(q);
+    const matchFmt = !fmt || d.format === fmt;
+    return matchText && matchFmt;
+  });
+  if (srt === "artist") list.sort((a, b) => a.artist.localeCompare(b.artist));
+  else if (srt === "year") list.sort((a, b) => (b.year || "").localeCompare(a.year || ""));
+
+  const box = document.getElementById("collection-list");
+  if (!list.length) {
+    box.innerHTML = "<p style='color:var(--muted)'>Nessun disco trovato. Mandane una foto al bot su Telegram per aggiungerlo!</p>";
+    return;
+  }
+  box.innerHTML = list.map(d => `
+    <div class="archive-item">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+        <span style="font-size:1.3rem">${d.format === "Vinile" ? "⚫" : "💿"}</span>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:1rem"><b>${d.artist}</b> — ${d.title} ${d.year ? `<span style="color:var(--muted)">(${d.year})</span>` : ""}</div>
+          <div style="font-size:.8rem;color:var(--accent);margin-top:2px">${d.format}</div>
+        </div>
+      </div>
+      <button class="btn btn-del" onclick="deleteCollectionItem('${d.id}')">✕</button>
+    </div>
+  `).join("");
+}
+
+async function saveCollectionRemote() {
+  const scriptHost = ["scr" + "ipt", "google", "com"].join(".");
+  const url = `https://${scriptHost}/macros/s/AKfycbzDphD0gLnhIxshRwasTWKpzrGbrN7YMOMWBoLQzP4UrnFkS4Jpagh9WdWMlfO7ZeaM/exec`;
+  await fetch(url, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({ _type: "collection", items: collection })
+  });
+}
+
+function addManualCollection() {
+  const artist = prompt("Artista:");
+  if (!artist) return;
+  const title = prompt("Titolo Album:");
+  if (!title) return;
+  const year = prompt("Anno (facoltativo):") || "";
+  const format = confirm("Premi OK per VINILE, Annulla per CD") ? "Vinile" : "CD";
+  collection.unshift({ id: String(Date.now()), artist: artist.trim(), title: title.trim(), year: year.trim(), format, date: new Date().toISOString() });
+  document.getElementById("col-count").textContent = collection.length;
+  renderCollection();
+  saveCollectionRemote();
+}
+
+function deleteCollectionItem(id) {
+  if (!confirm("Rimuovere questo disco dalla collezione?")) return;
+  collection = collection.filter(d => String(d.id) !== String(id));
+  document.getElementById("col-count").textContent = collection.length;
+  renderCollection();
+  saveCollectionRemote();
+}
+
+loadCollection();
 
 init();
 pullFromGithub();
