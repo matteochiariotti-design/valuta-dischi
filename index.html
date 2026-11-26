@@ -619,50 +619,72 @@ function renderCollection() {
     box.innerHTML = "<p style='color:var(--muted)'>Nessun disco trovato. Mandane una foto al bot su Telegram per aggiungerlo!</p>";
     return;
   }
-  box.innerHTML = list.map(d => `
-    <div class="archive-item">
-      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
-        <span style="font-size:1.3rem">${d.format === "Vinile" ? "⚫" : "💿"}</span>
-        <div style="min-width:0;flex:1">
-          <div style="font-size:1rem"><b>${d.artist}</b> — ${d.title} ${d.year ? `<span style="color:var(--muted)">(${d.year})</span>` : ""}</div>
-          <div style="font-size:.8rem;color:var(--accent);margin-top:2px">${d.format}</div>
+      box.innerHTML = list.map(d => `
+      <div class="archive-item">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+          <span style="font-size:1.3rem">${d.format === "Vinile" ? "⚫" : "💿"}</span>
+          <div style="min-width:0;flex:1">
+            <div style="font-size:1rem"><b>${d.artist}</b> — ${d.title} ${d.year ? `<span style="color:var(--muted)">(${d.year})</span>` : ""}</div>
+            <div style="font-size:.8rem;color:var(--accent);margin-top:2px">${d.format}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sec" onclick="editCollectionItem('${d.id}')" title="Modifica">✏️</button>
+          <button class="btn btn-del" onclick="deleteCollectionItem('${d.id}')" title="Elimina">✕</button>
         </div>
       </div>
-      <button class="btn btn-del" onclick="deleteCollectionItem('${d.id}')">✕</button>
-    </div>
-  `).join("");
-}
+    `).join("");
+  }
 
-async function saveCollectionRemote() {
-  const scriptHost = ["scr" + "ipt", "google", "com"].join(".");
-  const url = `https://${scriptHost}/macros/s/AKfycbzDphD0gLnhIxshRwasTWKpzrGbrN7YMOMWBoLQzP4UrnFkS4Jpagh9WdWMlfO7ZeaM/exec`;
-  await fetch(url, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({ _type: "collection", items: collection })
-  });
-}
+  function editCollectionItem(id) {
+    const item = collection.find(d => String(d.id) === String(id));
+    if (!item) return;
+    const artist = prompt("Artista:", item.artist);
+    if (artist === null) return;
+    const title = prompt("Titolo Album:", item.title);
+    if (title === null) return;
+    const year = prompt("Anno (4 cifre):", item.year || "");
+    if (year === null) return;
+    const format = confirm("Premi OK per VINILE, Annulla per CD") ? "Vinile" : "CD";
+    item.artist = artist.trim() || item.artist;
+    item.title = title.trim() || item.title;
+    item.year = year.trim();
+    item.format = format;
+    renderCollection();
+    saveCollectionRemote();
+  }
 
-function addManualCollection() {
-  const artist = prompt("Artista:");
-  if (!artist) return;
-  const title = prompt("Titolo Album:");
-  if (!title) return;
-  const year = prompt("Anno (facoltativo):") || "";
-  const format = confirm("Premi OK per VINILE, Annulla per CD") ? "Vinile" : "CD";
-  collection.unshift({ id: String(Date.now()), artist: artist.trim(), title: title.trim(), year: year.trim(), format, date: new Date().toISOString() });
-  document.getElementById("col-count").textContent = collection.length;
-  renderCollection();
-  saveCollectionRemote();
-}
+  async function saveCollectionRemote() {
+    const scriptHost = ["scr" + "ipt", "google", "com"].join(".");
+    const url = `https://${scriptHost}/macros/s/AKfycbzDphD0gLnhIxshRwasTWKpzrGbrN7YMOMWBoLQzP4UrnFkS4Jpagh9WdWMlfO7ZeaM/exec`;
+    await fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({ _type: "collection", items: collection })
+    });
+  }
 
-function deleteCollectionItem(id) {
-  if (!confirm("Rimuovere questo disco dalla collezione?")) return;
-  collection = collection.filter(d => String(d.id) !== String(id));
-  document.getElementById("col-count").textContent = collection.length;
-  renderCollection();
-  saveCollectionRemote();
-}
+  function addManualCollection() {
+    const artist = prompt("Artista:");
+    if (!artist) return;
+    const title = prompt("Titolo Album:");
+    if (!title) return;
+    const year = prompt("Anno (facoltativo):") || "";
+    const format = confirm("Premi OK per VINILE, Annulla per CD") ? "Vinile" : "CD";
+    collection.unshift({ id: String(Date.now()), artist: artist.trim(), title: title.trim(), year: year.trim(), format, date: new Date().toISOString() });
+    document.getElementById("col-count").textContent = collection.length;
+    renderCollection();
+    saveCollectionRemote();
+  }
+
+  function deleteCollectionItem(id) {
+    if (!confirm("Rimuovere questo disco dalla collezione?")) return;
+    collection = collection.filter(d => String(d.id) !== String(id));
+    document.getElementById("col-count").textContent = collection.length;
+    renderCollection();
+    saveCollectionRemote();
+  }
+
 
 loadCollection();
 
