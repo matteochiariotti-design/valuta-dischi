@@ -1,147 +1,259 @@
 [
   {
-    "id": "1795727969006_1004",
-    "artist": "Amy Winehouse",
-    "title": "Back to Black",
-    "year": "2006",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_6812",
-    "artist": "The Afghan Whigs",
-    "title": "Gentlemen",
-    "year": "1993",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_8348",
-    "artist": "Aerosmith",
-    "title": "Get Your Wings",
-    "year": "1974",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_3445",
-    "artist": "AC/DC",
-    "title": "If You Want Blood You've Got It",
-    "year": "1978",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_6795",
-    "artist": "Aerosmith",
-    "title": "Pump",
-    "year": "1989",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_3248",
-    "artist": "Aerosmith",
-    "title": "Get a Grip",
-    "year": "1993",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_9543",
-    "artist": "Aerosmith",
-    "title": "Toys in the Attic",
-    "year": "1975",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_2903",
-    "artist": "Aerosmith",
-    "title": "Nine Lives",
-    "year": "1997",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_4744",
-    "artist": "Aerosmith",
-    "title": "Greatest Hits 1973-1988",
-    "year": "1988",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_5649",
-    "artist": "Aerosmith",
-    "title": "Aerosmith",
-    "year": "1973",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_2917",
-    "artist": "Aerosmith",
-    "title": "Big Ones",
-    "year": "1994",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_8436",
-    "artist": "Aerosmith",
-    "title": "Rocks",
-    "year": "1976",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_8859",
-    "artist": "Aerosmith",
-    "title": "Pandora's Box",
-    "year": "1991",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_122",
-    "artist": "Aerosmith",
-    "title": "Just Push Play",
-    "year": "2001",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_5052",
-    "artist": "Aerosmith",
-    "title": "Done with Mirrors",
-    "year": "1985",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969006_9803",
-    "artist": "AC/DC",
-    "title": "High Voltage",
-    "year": "1976",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.006Z"
-  },
-  {
-    "id": "1795727969005_9576",
-    "artist": "99 Posse",
-    "title": "Curre curre guagliò",
-    "year": "1993",
-    "format": "CD",
-    "date": "2026-11-26T21:19:29.005Z"
-  },
-  {
     "id": "1795727432663_3294",
     "artist": "Stevie Wonder",
     "title": "Hotter than July",
     "year": "1980",
     "format": "Vinile",
     "date": "2026-11-26T21:10:32.664Z"
+  },
+  {
+    "id": "1795727310573_201",
+    "artist": "Aerosmith",
+    "title": "Live! Bootleg",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:08:30.573Z"
+  },
+  {
+    "id": "1795727310571_6185",
+    "artist": "99 Posse",
+    "title": "Curre Curre Guagliò",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:08:30.571Z"
+  },
+  {
+    "id": "1795727251649_2800",
+    "artist": "Polly Jean Harvey",
+    "title": "To Bring You My Love",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_534",
+    "artist": "The Allman Brothers Band",
+    "title": "At Fillmore East",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_8995",
+    "artist": "Air",
+    "title": "Moon Safari",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_2351",
+    "artist": "Afterhours",
+    "title": "Hai paura del buio?",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_8388",
+    "artist": "Articolo 31",
+    "title": "Nessuno",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_1251",
+    "artist": "Area",
+    "title": "Arbeit Macht Frei",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251649_613",
+    "artist": "Angelo Badalamenti",
+    "title": "Music from Twin Peaks",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.649Z"
+  },
+  {
+    "id": "1795727251648_4472",
+    "artist": "The Alan Parsons Project",
+    "title": "Tales of Mystery and Imagination",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T21:07:31.648Z"
+  },
+  {
+    "id": "1795727251648_1541",
+    "artist": "Arcade Fire",
+    "title": "Reflektor",
+    "year": "",
+    "format": "Vinile",
+    "date": "2026-11-26T21:07:31.648Z"
+  },
+  {
+    "id": "1795682801231_1247",
+    "artist": "Amy Winehouse",
+    "title": "Back to Black",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_9447",
+    "artist": "The Afghan Whigs",
+    "title": "Gentlemen",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_2868",
+    "artist": "Aerosmith",
+    "title": "Get Your Wings",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_5694",
+    "artist": "AC/DC",
+    "title": "If You Want Blood You've Got It",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_4351",
+    "artist": "Aerosmith",
+    "title": "Pump",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_5182",
+    "artist": "Aerosmith",
+    "title": "Toys in the Attic",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_7960",
+    "artist": "Aerosmith",
+    "title": "",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_8495",
+    "artist": "Aerosmith",
+    "title": "Nine Lives",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_181",
+    "artist": "Aerosmith",
+    "title": "Greatest Hits 1973-1988",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_9811",
+    "artist": "Aerosmith",
+    "title": "Get a Grip",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_1080",
+    "artist": "Aerosmith",
+    "title": "Draw the Line",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_2029",
+    "artist": "Aerosmith",
+    "title": "Big Ones",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_9347",
+    "artist": "Aerosmith",
+    "title": "Rocks",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_9878",
+    "artist": "Aerosmith",
+    "title": "Pandora's Toys",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_4747",
+    "artist": "Aerosmith",
+    "title": "Just Push Play",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_6515",
+    "artist": "Aerosmith",
+    "title": "Done with Mirrors",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_7446",
+    "artist": "AC/DC",
+    "title": "High Voltage",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_8961",
+    "artist": "Talkin Loud",
+    "title": "",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_6011",
+    "artist": "",
+    "title": "",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
+  },
+  {
+    "id": "1795682801231_6542",
+    "artist": "99 Posse",
+    "title": "Curre curre guaglió",
+    "year": "",
+    "format": "CD",
+    "date": "2026-11-26T08:46:41.231Z"
   },
   {
     "id": "1795656767888_4755",
