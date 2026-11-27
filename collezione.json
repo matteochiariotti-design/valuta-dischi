@@ -1,5 +1,21 @@
 [
   {
+    "id": "1795823673598_1524",
+    "artist": "The Beatles",
+    "title": "Revolver",
+    "year": "1966",
+    "format": "Vinile",
+    "date": "2026-11-27T23:54:33.598Z"
+  },
+  {
+    "id": "1795823673597_2628",
+    "artist": "Bruce Springsteen",
+    "title": "Tunnel of Love",
+    "year": "1987",
+    "format": "Vinile",
+    "date": "2026-11-27T23:54:33.597Z"
+  },
+  {
     "id": "1795823669558_7805",
     "artist": "Bruce Springsteen",
     "title": "Born in the U.S.A.",
